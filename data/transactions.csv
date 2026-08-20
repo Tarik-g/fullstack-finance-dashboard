@@ -1,0 +1,11 @@
+﻿Datum;Empfänger_Sender;IBAN;Verwendungszweck;Betrag_EUR;Kategorie;Status
+2026-08-01;REWE Markt GmbH;DE89370400440532013000;Einkauf Lebensmittel kartenzahlung;-45.82;Lebensmittel;Gebucht
+2026-08-01;Arbeitgeber GmbH;DE45100100100123456789;Gehalt 08/2026;2850.0;Gehalt;Gebucht
+2026-08-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom/Gas 08/2026;-128.5;Nebenkosten;Gebucht
+2026-08-05;Netflix International B.V.;DE55500105170123456789;Monatsabo Premium;-17.99;Unterhaltung;Gebucht
+2026-08-08;Aral Tankstelle;DE77200400000123456789;Kraftstoff Super E10;-65.4;Transport;Gebucht
+2026-08-10;Max Mustermann;DE91100100100987654321;Rückzahlung Abendessen;25.0;Gutschrift;Gebucht
+2026-08-12;Amazon Payments Europe;DE33500700100876543210;Bestellung #302-8192011-12345;-34.9;Online-Shopping;Gebucht
+2026-08-15;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag Aug 2026;-29.99;Telekommunikation;Gebucht
+2026-08-18;Bäckerei Müller;DE66700800000112233445;Kontaktlos-Zahlung;-6.4;Gastronomie;Gebucht
+2026-08-20;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 08/2026;-49.9;Sport & Freizeit;Gebucht
