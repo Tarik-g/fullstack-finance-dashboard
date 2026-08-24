@@ -1,4 +1,4 @@
-﻿Datum;Empfänger_Sender;IBAN;Verwendungszweck;Betrag_EUR;Kategorie;Status
+﻿Datum;Empfänger_Sender;IBAN;Verwendungszweck;Betrag_EURO;Kategorie;Status
 2026-08-01;REWE Markt GmbH;DE89370400440532013000;Einkauf Lebensmittel kartenzahlung;-45.82;Lebensmittel;Gebucht
 2026-08-01;Arbeitgeber GmbH;DE45100100100123456789;Gehalt 08/2026;2850.0;Gehalt;Gebucht
 2026-08-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom/Gas 08/2026;-128.5;Nebenkosten;Gebucht

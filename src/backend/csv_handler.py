@@ -23,11 +23,12 @@ def validate_csv(df):
     Returns:
         bool: True if the DataFrame is valid, False otherwise.
     """
-    required_columns = ['Datum', 'Betrag_EUR', 'Kategorie', 'Status', 'Empfänger_Sender', 'Verwendungszweck', 'IBAN']
+    required_columns = ['Datum', 'Betrag_EURO', 'Kategorie', 'Status', 'Empfänger_Sender', 'Verwendungszweck', 'IBAN']
     for column in required_columns:
         if column not in df.columns:
+            print("FEHLENDE SPALTE:", column)
             return False
-    if not pd.api.types.is_numeric_dtype(df['Betrag_EUR']):
+    if not pd.api.types.is_numeric_dtype(df['Betrag_EURO']):
         return False
     if not pd.api.types.is_datetime64_any_dtype(df['Datum']):
         return False
@@ -74,7 +75,7 @@ def calculate_total_income(df):
         float: The total income.
 
     """
-    return df[df['Betrag_EUR'] > 0]['Betrag_EUR'].sum()
+    return df[df['Betrag_EURO'] > 0]['Betrag_EURO'].sum()
 
 
 def calculate_total_expenses(df):
@@ -88,7 +89,7 @@ def calculate_total_expenses(df):
         float: The total expenses.
 
     """
-    return abs(df[df['Betrag_EUR'] < 0]['Betrag_EUR'].sum())
+    return abs(df[df['Betrag_EURO'] < 0]['Betrag_EURO'].sum())
 
 
 def calculate_expenses_per_category(df):
@@ -102,7 +103,7 @@ def calculate_expenses_per_category(df):
         pd.Series: A Series with categories as index and total expenses as values.
 
     """
-    return abs(df[df['Betrag_EUR'] < 0].groupby('Kategorie')['Betrag_EUR'].sum())
+    return abs(df[df['Betrag_EURO'] < 0].groupby('Kategorie')['Betrag_EURO'].sum())
 
 
 def calculate_saldo(df):
@@ -175,7 +176,7 @@ def calculate_expenses_per_month(df, month, year):
 
     """
     filtered_df = df[(df['Datum'].dt.month == month) & (df['Datum'].dt.year == year)]
-    return abs(filtered_df[filtered_df['Betrag_EUR'] < 0]['Betrag_EUR'].sum())
+    return abs(filtered_df[filtered_df['Betrag_EURO'] < 0]['Betrag_EURO'].sum())
 
 def calculate_expenses_for_all_months(df):
     """
@@ -188,13 +189,26 @@ def calculate_expenses_for_all_months(df):
         pd.Series: A Series with (year, month) as index and total expenses as values.
 
     """
-    expenses = df[df['Betrag_EUR'] < 0]
+    expenses = df[df['Betrag_EURO'] < 0]
 
     return abs(
         expenses.groupby(
             expenses['Datum'].dt.to_period('M')
-        )['Betrag_EUR'].sum()
+        )['Betrag_EURO'].sum()
     )
+
+
+def remove_csv_duplicates(df):
+    before = len(df)
+
+    df_clean = df.drop_duplicates()
+
+    after = len(df_clean)
+
+    print(f"Removed {before - after} duplicate rows.")
+
+    return df_clean
+
 
 if __name__ == "__main__":
     file_path = 'C:\\Users\\Tarik\\Desktop\\Dateien\\Code\\fullstack-finance-dashboard\\data\\transactions.csv'
