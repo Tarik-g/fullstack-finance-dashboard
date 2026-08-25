@@ -1,3 +1,12 @@
+import os
+import psycopg
+
+from dotenv import load_dotenv
+from psycopg import OperationalError
+
+load_dotenv()
+
+
 def get_postgres_connection():
     """
     Establishes a connection to the PostgreSQL database using the provided configuration.
@@ -10,11 +19,11 @@ def get_postgres_connection():
 
     # Database configuration parameters
     db_config = {
-        'dbname': 'finance_dashboard', 
-        'user': 'postgres',
-        'password': '',
-        'host': 'localhost',
-        'port': '5432'
+        'dbname': os.getenv('DB_NAME'),
+        'user': os.getenv('DB_USER'),
+        'password': os.getenv('DB_PASSWORD'),
+        'host': os.getenv('DB_HOST'),
+        'port': os.getenv('DB_PORT')
     }
 
     try:
@@ -46,6 +55,48 @@ def get_all_transactions(connection):
         print(f"Error: Could not retrieve transactions. {e}")
         return []
 
+
+def get_transaction_by_id(connection, transaction_id):
+    """
+    Retrieves a specific transaction by its ID from the 'transactions' table in the PostgreSQL database.
+
+    Args:
+        connection: A psycopg connection object to the PostgreSQL database.
+        transaction_id: The ID of the transaction to retrieve.#
+    
+    Returns:
+        transaction: A tuple containing the transaction details, or None if not found.
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM public.transactions WHERE id = %s;", (transaction_id,))
+            transaction = cursor.fetchone()
+            return transaction
+    except Exception as e:
+        print(f"Error: Could not retrieve transaction with ID {transaction_id}. {e}")
+        return None
+
+def delete_transaction_by_id(connection, transaction_id):
+    """
+    Deletes a specific transaction by its ID from the 'transactions' table in the PostgreSQL database.
+
+    Args:
+        connection: A psycopg connection object to the PostgreSQL database.
+        transaction_id: The ID of the transaction to delete.
+
+    Returns:
+        success: A boolean indicating whether the deletion was successful.
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM public.transactions WHERE id = %s;", (transaction_id,))
+            connection.commit()
+            print(f"Transaction with ID {transaction_id} deleted successfully.")
+            return True
+    except Exception as e:
+        print(f"Error: Could not delete transaction with ID {transaction_id}. {e}")
+        connection.rollback()
+        return False
 
 # insert_transaction() selbst mit cursor.execute(...) connection.commit()
 
