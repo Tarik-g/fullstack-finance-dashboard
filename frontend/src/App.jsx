@@ -1,13 +1,35 @@
 import { useEffect, useState } from "react";
 
-function Transaction({ id, name, amount, onDelete, isDeleting }) {
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+  style: "currency",
+  currency: "EUR",
+});
+
+const dateFormatter = new Intl.DateTimeFormat("de-DE");
+
+function TransactionRow({ transaction, onDelete, isDeleting }) {
+  const formattedDate = dateFormatter.format(
+    new Date(`${transaction.bookingDate}T00:00:00`),
+  );
+
   return (
-    <div>
-      <strong>{name}</strong>: {amount} €
-      <button onClick={() => onDelete(id)} disabled={isDeleting}>
-        {isDeleting ? "Wird gelöscht …" : "Löschen"}
-      </button>
-    </div>
+    <tr>
+      <td>{formattedDate}</td>
+      <td>{transaction.counterparty}</td>
+      <td>{transaction.purpose || "—"}</td>
+      <td>{transaction.category || "Ohne Kategorie"}</td>
+      <td>{transaction.status || "—"}</td>
+      <td>{currencyFormatter.format(transaction.amount)}</td>
+      <td>
+        <button
+          onClick={() => onDelete(transaction.id)}
+          disabled={isDeleting}
+          aria-label={`${transaction.counterparty} löschen`}
+        >
+          {isDeleting ? "Wird gelöscht …" : "Löschen"}
+        </button>
+      </td>
+    </tr>
   );
 }
 function App() {
@@ -35,8 +57,13 @@ function App() {
       .then((data) => {
         const mappedTransactions = data.map((transaction) => ({
           id: transaction.id,
-          name: transaction.empfaenger_sender,
+          bookingDate: transaction.datum,
+          counterparty: transaction.empfaenger_sender,
+          iban: transaction.iban,
+          purpose: transaction.verwendungszweck,
           amount: Number(transaction.betrag_euro),
+          category: transaction.kategorie,
+          status: transaction.status,
         }));
 
         setTransactions(mappedTransactions);
@@ -169,21 +196,41 @@ function App() {
         {isSubmitting ? "Wird gespeichert …" : "Transaktion hinzufügen"}
       </button>
       <p>Eingegebener Betrag: {amount} €</p>
-      <p>Kontostand: {balance} €</p>
-      <p>Einnahmen: {income} €</p>
-      <p>Ausgaben: {expenses} €</p>
+      <p>Kontostand: {currencyFormatter.format(balance)}</p>
+      <p>Einnahmen: {currencyFormatter.format(income)}</p>
+      <p>Ausgaben: {currencyFormatter.format(expenses)}</p>
       {deleteError && <p role="alert">{deleteError}</p>}
       <h2>Transaktionen</h2>
-      {transactions.map((transaction) => (
-        <Transaction
-          key={transaction.id}
-          id={transaction.id}
-          name={transaction.name}
-          amount={transaction.amount}
-          onDelete={deleteTransaction}
-          isDeleting={deletingId === transaction.id}
-        />
-      ))}
+      <table>
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Empfänger / Absender</th>
+            <th>Verwendungszweck</th>
+            <th>Kategorie</th>
+            <th>Status</th>
+            <th>Betrag</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {transactions.length === 0 ? (
+            <tr>
+              <td colSpan="7">Keine Transaktionen vorhanden.</td>
+            </tr>
+          ) : (
+            transactions.map((transaction) => (
+              <TransactionRow
+                key={transaction.id}
+                transaction={transaction}
+                onDelete={deleteTransaction}
+                isDeleting={deletingId === transaction.id}
+              />
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
