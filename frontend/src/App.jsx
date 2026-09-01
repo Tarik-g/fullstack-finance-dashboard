@@ -19,9 +19,16 @@ function TransactionRow({ transaction, onDelete, isDeleting }) {
       <td>{transaction.purpose || "—"}</td>
       <td>{transaction.category || "Ohne Kategorie"}</td>
       <td>{transaction.status || "—"}</td>
-      <td>{currencyFormatter.format(transaction.amount)}</td>
+      <td
+        className={`amount ${
+          transaction.amount >= 0 ? "amount-positive" : "amount-negative"
+        }`}
+      >
+        {currencyFormatter.format(transaction.amount)}
+      </td>
       <td>
         <button
+          className="delete-button"
           onClick={() => onDelete(transaction.id)}
           disabled={isDeleting}
           aria-label={`${transaction.counterparty} löschen`}
@@ -178,61 +185,139 @@ function App() {
   }
 
   return (
-    <div>
-      <h1>Hallo {name}</h1>
-      <input
-        type="text"
-        placeholder="Transaktion eingeben"
-        value={transactionName}
-        onChange={(event) => setTransactionName(event.target.value)}
-      />
-      <input
-        type="number"
-        value={amount}
-        onChange={(event) => setAmount(Number(event.target.value))}
-      />
-      {formError && <p role="alert">{formError}</p>}
-      <button onClick={addTransaction} disabled={isSubmitting}>
-        {isSubmitting ? "Wird gespeichert …" : "Transaktion hinzufügen"}
-      </button>
-      <p>Eingegebener Betrag: {amount} €</p>
-      <p>Kontostand: {currencyFormatter.format(balance)}</p>
-      <p>Einnahmen: {currencyFormatter.format(income)}</p>
-      <p>Ausgaben: {currencyFormatter.format(expenses)}</p>
-      {deleteError && <p role="alert">{deleteError}</p>}
-      <h2>Transaktionen</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Datum</th>
-            <th>Empfänger / Absender</th>
-            <th>Verwendungszweck</th>
-            <th>Kategorie</th>
-            <th>Status</th>
-            <th>Betrag</th>
-            <th>Aktion</th>
-          </tr>
-        </thead>
+    <div className="app-shell">
+      <header className="dashboard-header">
+        <div>
+          <span className="eyebrow">Personal Finance</span>
+          <h1>Finance Dashboard</h1>
+          <p className="header-description">
+            Willkommen zurück, {name}. Hier siehst du deine aktuelle
+            Finanzübersicht.
+          </p>
+        </div>
 
-        <tbody>
-          {transactions.length === 0 ? (
-            <tr>
-              <td colSpan="7">Keine Transaktionen vorhanden.</td>
-            </tr>
-          ) : (
-            transactions.map((transaction) => (
-              <TransactionRow
-                key={transaction.id}
-                transaction={transaction}
-                onDelete={deleteTransaction}
-                isDeleting={deletingId === transaction.id}
+        <div className="connection-status">
+          <span className="status-dot"></span>
+          API verbunden
+        </div>
+      </header>
+
+      <main className="dashboard-content">
+        <section className="panel form-panel">
+          <div className="section-header">
+            <div>
+              <span className="eyebrow">Neue Buchung</span>
+              <h2>Transaktion hinzufügen</h2>
+            </div>
+          </div>
+
+          <div className="form-grid">
+            <label>
+              <span>Empfänger / Absender</span>
+              <input
+                type="text"
+                placeholder="Zum Beispiel: REWE Markt"
+                value={transactionName}
+                onChange={(event) => setTransactionName(event.target.value)}
               />
-            ))
-          )}
-        </tbody>
-      </table>
+            </label>
+
+            <label>
+              <span>Betrag in Euro</span>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                value={amount}
+                onChange={(event) => setAmount(Number(event.target.value))}
+              />
+            </label>
+
+            <button
+              className="primary-button"
+              onClick={addTransaction}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Wird gespeichert …" : "Transaktion hinzufügen"}
+            </button>
+          </div>
+
+          {formError && <p role="alert">{formError}</p>}
+        </section>
+
+        <section className="summary-grid" aria-label="Finanzübersicht">
+          <article className="summary-card balance-card">
+            <span>Aktueller Kontostand</span>
+            <strong>{currencyFormatter.format(balance)}</strong>
+            <small>Gesamter verfügbarer Saldo</small>
+          </article>
+
+          <article className="summary-card">
+            <span>Einnahmen</span>
+            <strong className="amount-positive">
+              {currencyFormatter.format(income)}
+            </strong>
+            <small>Summe aller positiven Buchungen</small>
+          </article>
+
+          <article className="summary-card">
+            <span>Ausgaben</span>
+            <strong className="amount-negative">
+              {currencyFormatter.format(expenses)}
+            </strong>
+            <small>Summe aller negativen Buchungen</small>
+          </article>
+        </section>
+
+        <section className="panel transactions-panel">
+          <div className="section-header">
+            <div>
+              <span className="eyebrow">Letzte Aktivitäten</span>
+              <h2>Transaktionen</h2>
+            </div>
+
+            <span className="transaction-count">
+              {transactions.length} Buchungen
+            </span>
+          </div>
+
+          {deleteError && <p role="alert">{deleteError}</p>}
+
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Empfänger / Absender</th>
+                  <th>Verwendungszweck</th>
+                  <th>Kategorie</th>
+                  <th>Status</th>
+                  <th>Betrag</th>
+                  <th>Aktion</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="7">Keine Transaktionen vorhanden.</td>
+                  </tr>
+                ) : (
+                  transactions.map((transaction) => (
+                    <TransactionRow
+                      key={transaction.id}
+                      transaction={transaction}
+                      onDelete={deleteTransaction}
+                      isDeleting={deletingId === transaction.id}
+                    />
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
-
 export default App;
