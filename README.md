@@ -6,19 +6,19 @@ Die Transaktionen werden aus einer CSV-Datei eingelesen, mit Pandas verarbeitet,
 
 ## Funktionen
 
-* CSV-Import und Datenvalidierung
-* Berechnung von Einnahmen, Ausgaben und Saldo
-* Auswertung nach Kategorie und Monat
-* Speicherung in PostgreSQL
-* REST-API zum Abrufen, Hinzufügen und Löschen von Transaktionen
-* Visualisierung im React-Dashboard – in Entwicklung
+- CSV-Import und Datenvalidierung
+- Berechnung von Einnahmen, Ausgaben und Saldo
+- Auswertung nach Kategorie und Monat
+- Speicherung in PostgreSQL
+- REST-API zum Abrufen, Hinzufügen und Löschen von Transaktionen
+- Visualisierung im React-Dashboard – in Entwicklung
 
 ## Technologien
 
-* Python, FastAPI und Pandas
-* PostgreSQL
-* React und JavaScript
-* Git und GitHub
+- Python, FastAPI und Pandas
+- PostgreSQL
+- React und JavaScript
+- Git und GitHub
 
 ## Start
 
@@ -26,12 +26,14 @@ Backend:
 
 ```bash
 python -m uvicorn src.backend.main:app --reload
+http://127.0.0.1:8000/docs
 ```
 
 Frontend:
 
 ```bash
 npm --prefix frontend run dev
+http://localhost:5173/
 ```
 
 ## Status
