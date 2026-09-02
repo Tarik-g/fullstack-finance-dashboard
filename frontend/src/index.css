@@ -457,3 +457,68 @@ td button:hover:not(:disabled) {
     margin: 0 1rem 1rem;
   }
 }
+
+.filter-bar {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.search-field {
+  display: flex;
+  width: 100%;
+  max-width: 440px;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.search-field input {
+  width: 100%;
+  margin: 0;
+}
+
+.type-filter {
+  display: flex;
+  min-width: 190px;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+select {
+  min-height: 42px;
+  padding: 0.65rem 2.2rem 0.65rem 0.8rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  font: inherit;
+}
+
+select:focus-visible {
+  outline: 3px solid rgba(124, 92, 255, 0.35);
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  .filter-bar {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 0 1rem 1rem;
+  }
+
+  .search-field {
+    max-width: none;
+  }
+
+  .type-filter {
+    min-width: 0;
+  }
+}

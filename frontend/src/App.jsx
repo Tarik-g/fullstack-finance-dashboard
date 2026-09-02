@@ -1,323 +1,191 @@
 import { useEffect, useState } from "react";
+import {
+  createTransaction,
+  deleteTransaction,
+  getCategories,
+  getTransactions,
+} from "./api/financeApi";
+import DashboardHeader from "./components/DashboardHeader";
+import SummaryCards from "./components/SummaryCards";
+import TransactionForm from "./components/TransactionForm";
+import TransactionsPanel from "./components/TransactionsPanel";
 
-const currencyFormatter = new Intl.NumberFormat("de-DE", {
-  style: "currency",
-  currency: "EUR",
-});
-
-const dateFormatter = new Intl.DateTimeFormat("de-DE");
-
-function TransactionRow({ transaction, onDelete, isDeleting }) {
-  const formattedDate = dateFormatter.format(
-    new Date(`${transaction.bookingDate}T00:00:00`),
-  );
-
-  return (
-    <tr>
-      <td>{formattedDate}</td>
-      <td>{transaction.counterparty}</td>
-      <td>{transaction.purpose || "—"}</td>
-      <td>{transaction.category || "Ohne Kategorie"}</td>
-      <td>{transaction.status || "—"}</td>
-      <td
-        className={`amount ${
-          transaction.amount >= 0 ? "amount-positive" : "amount-negative"
-        }`}
-      >
-        {currencyFormatter.format(transaction.amount)}
-      </td>
-      <td>
-        <button
-          className="delete-button"
-          onClick={() => onDelete(transaction.id)}
-          disabled={isDeleting}
-          aria-label={`${transaction.counterparty} löschen`}
-        >
-          {isDeleting ? "Wird gelöscht …" : "Löschen"}
-        </button>
-      </td>
-    </tr>
-  );
-}
 function App() {
-  const name = "Tarik";
-  // useeffect and  fetch()
+  const [name] = useState("Tarik");
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [transactionName, setTransactionName] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [categories, setCategories] = useState([]);
 
   function loadTransactions() {
-    return fetch("http://localhost:8000/transactions")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP-Fehler: ${response.status}`);
-        }
-
-        return response.json();
-      })
+    return getTransactions()
       .then((data) => {
-        const mappedTransactions = data.map((transaction) => ({
-          id: transaction.id,
-          bookingDate: transaction.datum,
-          counterparty: transaction.empfaenger_sender,
-          iban: transaction.iban,
-          purpose: transaction.verwendungszweck,
-          amount: Number(transaction.betrag_euro),
-          category: transaction.kategorie,
-          status: transaction.status,
-        }));
-
-        setTransactions(mappedTransactions);
+        setTransactions(data);
+        setError(null);
       })
-      .catch((error) => {
-        setError(error.message);
+      .catch((requestError) => {
+        setError(requestError.message);
       })
       .finally(() => {
         setIsLoading(false);
       });
   }
 
+  function loadCategories() {
+    return getCategories()
+      .then(setCategories)
+      .catch((requestError) => {
+        console.error(requestError);
+      });
+  }
+
   useEffect(() => {
     loadTransactions();
+    loadCategories();
   }, []);
 
-  const income = transactions
-    .filter((transaction) => transaction.amount > 0)
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  async function handleAddTransaction(event) {
+    event.preventDefault();
+    setFormError(null);
 
-  const expenses = Math.abs(
-    transactions
-      .filter((transaction) => transaction.amount < 0)
-      .reduce((sum, transaction) => sum + transaction.amount, 0),
-  );
-
-  const balance = income - expenses;
-
-  async function addTransaction() {
     const normalizedName = transactionName.trim();
+    const numericAmount = Number(amount.replace(",", "."));
 
     if (!normalizedName) {
-      setFormError("Bitte gib einen Empfänger oder Absender ein.");
+      setFormError("Bitte gib einen Namen ein.");
       return;
     }
 
-    if (amount === 0) {
-      setFormError("Der Betrag darf nicht 0 sein.");
+    if (!amount.trim() || !Number.isFinite(numericAmount)) {
+      setFormError("Bitte gib einen gültigen Betrag ein.");
       return;
     }
 
     setIsSubmitting(true);
-    setFormError(null);
 
     try {
-      const response = await fetch("http://localhost:8000/transactions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          datum: new Date().toISOString().slice(0, 10),
-          empfaenger_sender: normalizedName,
-          betrag_euro: amount,
-        }),
+      await createTransaction({
+        counterparty: normalizedName,
+        amount: numericAmount,
       });
-
-      if (!response.ok) {
-        throw new Error(
-          `Transaktion konnte nicht gespeichert werden: ${response.status}`,
-        );
-      }
-
       setTransactionName("");
-      setAmount(0);
-
+      setAmount("");
       await loadTransactions();
-    } catch (error) {
-      setFormError(error.message);
+    } catch (requestError) {
+      setFormError(requestError.message);
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  async function deleteTransaction(id) {
-    const confirmed = window.confirm(
-      "Möchtest du diese Transaktion wirklich löschen?",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  async function handleDeleteTransaction(id) {
     setDeletingId(id);
     setDeleteError(null);
 
     try {
-      const response = await fetch(`http://localhost:8000/transactions/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Transaktion konnte nicht gelöscht werden: ${response.status}`,
-        );
-      }
-
+      await deleteTransaction(id);
       await loadTransactions();
-    } catch (error) {
-      setDeleteError(error.message);
+    } catch (requestError) {
+      setDeleteError(requestError.message);
     } finally {
       setDeletingId(null);
     }
   }
 
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesSearch = [
+      transaction.counterparty,
+      transaction.purpose,
+      transaction.category,
+      transaction.iban,
+      transaction.status,
+    ].some((value) => value?.toLowerCase().includes(normalizedSearch));
+
+    const matchesType =
+      typeFilter === "all" ||
+      (typeFilter === "income" && transaction.amount >= 0) ||
+      (typeFilter === "expense" && transaction.amount < 0);
+
+    const matchesCategory =
+      categoryFilter === "all" || transaction.category === categoryFilter;
+
+    return matchesSearch && matchesType && matchesCategory;
+  });
+
+  const income = transactions.reduce(
+    (sum, transaction) =>
+      transaction.amount > 0 ? sum + transaction.amount : sum,
+    0,
+  );
+  const expenses = transactions.reduce(
+    (sum, transaction) =>
+      transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum,
+    0,
+  );
+  const balance = income - expenses;
+
   if (isLoading) {
-    return <p>Transaktionen werden geladen …</p>;
+    return <div className="state-screen">Transaktionen werden geladen ...</div>;
   }
 
   if (error) {
-    return <p role="alert">Fehler: {error}</p>;
+    return (
+      <div className="state-screen state-error">
+        <strong>Die Daten konnten nicht geladen werden.</strong>
+        <span>{error}</span>
+      </div>
+    );
   }
 
   return (
     <div className="app-shell">
-      <header className="dashboard-header">
-        <div>
-          <span className="eyebrow">Personal Finance</span>
-          <h1>Finance Dashboard</h1>
-          <p className="header-description">
-            Willkommen zurück, {name}. Hier siehst du deine aktuelle
-            Finanzübersicht.
-          </p>
-        </div>
-
-        <div className="connection-status">
-          <span className="status-dot"></span>
-          API verbunden
-        </div>
-      </header>
+      <DashboardHeader name={name} />
 
       <main className="dashboard-content">
-        <section className="panel form-panel">
-          <div className="section-header">
-            <div>
-              <span className="eyebrow">Neue Buchung</span>
-              <h2>Transaktion hinzufügen</h2>
-            </div>
-          </div>
+        <TransactionForm
+          transactionName={transactionName}
+          amount={amount}
+          isSubmitting={isSubmitting}
+          error={formError}
+          onNameChange={setTransactionName}
+          onAmountChange={setAmount}
+          onSubmit={handleAddTransaction}
+        />
 
-          <div className="form-grid">
-            <label>
-              <span>Empfänger / Absender</span>
-              <input
-                type="text"
-                placeholder="Zum Beispiel: REWE Markt"
-                value={transactionName}
-                onChange={(event) => setTransactionName(event.target.value)}
-              />
-            </label>
+        <SummaryCards
+          balance={balance}
+          income={income}
+          expenses={expenses}
+        />
 
-            <label>
-              <span>Betrag in Euro</span>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0,00"
-                value={amount}
-                onChange={(event) => setAmount(Number(event.target.value))}
-              />
-            </label>
-
-            <button
-              className="primary-button"
-              onClick={addTransaction}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Wird gespeichert …" : "Transaktion hinzufügen"}
-            </button>
-          </div>
-
-          {formError && <p role="alert">{formError}</p>}
-        </section>
-
-        <section className="summary-grid" aria-label="Finanzübersicht">
-          <article className="summary-card balance-card">
-            <span>Aktueller Kontostand</span>
-            <strong>{currencyFormatter.format(balance)}</strong>
-            <small>Gesamter verfügbarer Saldo</small>
-          </article>
-
-          <article className="summary-card">
-            <span>Einnahmen</span>
-            <strong className="amount-positive">
-              {currencyFormatter.format(income)}
-            </strong>
-            <small>Summe aller positiven Buchungen</small>
-          </article>
-
-          <article className="summary-card">
-            <span>Ausgaben</span>
-            <strong className="amount-negative">
-              {currencyFormatter.format(expenses)}
-            </strong>
-            <small>Summe aller negativen Buchungen</small>
-          </article>
-        </section>
-
-        <section className="panel transactions-panel">
-          <div className="section-header">
-            <div>
-              <span className="eyebrow">Letzte Aktivitäten</span>
-              <h2>Transaktionen</h2>
-            </div>
-
-            <span className="transaction-count">
-              {transactions.length} Buchungen
-            </span>
-          </div>
-
-          {deleteError && <p role="alert">{deleteError}</p>}
-
-          <div className="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Datum</th>
-                  <th>Empfänger / Absender</th>
-                  <th>Verwendungszweck</th>
-                  <th>Kategorie</th>
-                  <th>Status</th>
-                  <th>Betrag</th>
-                  <th>Aktion</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {transactions.length === 0 ? (
-                  <tr>
-                    <td colSpan="7">Keine Transaktionen vorhanden.</td>
-                  </tr>
-                ) : (
-                  transactions.map((transaction) => (
-                    <TransactionRow
-                      key={transaction.id}
-                      transaction={transaction}
-                      onDelete={deleteTransaction}
-                      isDeleting={deletingId === transaction.id}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <TransactionsPanel
+          transactions={filteredTransactions}
+          totalCount={transactions.length}
+          deletingId={deletingId}
+          deleteError={deleteError}
+          onDelete={handleDeleteTransaction}
+          searchTerm={searchTerm}
+          typeFilter={typeFilter}
+          categoryFilter={categoryFilter}
+          categories={categories}
+          onSearchChange={setSearchTerm}
+          onTypeChange={setTypeFilter}
+          onCategoryChange={setCategoryFilter}
+        />
       </main>
     </div>
   );
 }
+
 export default App;

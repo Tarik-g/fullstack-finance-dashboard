@@ -188,3 +188,28 @@ async def delete_transaction(transaction_id: int):
         raise HTTPException(status_code=status.HTTP_200_OK, detail={"message": f"Transaction with ID {transaction_id} deleted successfully."})
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"error": f"Failed to delete transaction with ID {transaction_id}."})
+
+
+@app.get(
+    "/categories",
+    response_model=list[str],
+    status_code=status.HTTP_200_OK,
+    responses={
+        500: {"description": "Database connection failed"}
+    }
+)
+async def get_categories():
+    from .database import get_postgres_connection, get_all_categories
+
+    connection = get_postgres_connection()
+
+    if connection is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Could not connect to the database."},
+        )
+
+    categories = get_all_categories(connection)
+    connection.close()
+
+    return categories

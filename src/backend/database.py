@@ -208,6 +208,29 @@ def remove_database_duplicates(connection):
         connection.rollback()
         return False
 
+def get_all_categories(connection):
+    """
+    Returns all distinct, non-empty transaction categories.
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT DISTINCT kategorie
+                FROM public.transactions
+                WHERE kategorie IS NOT NULL
+                  AND TRIM(kategorie) <> ''
+                ORDER BY kategorie;
+                """
+            )
+
+            rows = cursor.fetchall()
+            return [row[0] for row in rows]
+
+    except Exception as error:
+        print(f"Error: Could not retrieve categories. {error}")
+        return []
+
 
 if __name__ == "__main__":
     connection = get_postgres_connection()
