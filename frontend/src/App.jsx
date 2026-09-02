@@ -1,22 +1,45 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createTransaction,
   deleteTransaction,
   getCategories,
   getTransactions,
+  updateTransaction,
 } from "./api/financeApi";
 import DashboardHeader from "./components/DashboardHeader";
 import SummaryCards from "./components/SummaryCards";
-import TransactionForm from "./components/TransactionForm";
+import TransactionModal from "./components/TransactionModal";
 import TransactionsPanel from "./components/TransactionsPanel";
 
+function getLocalDateString() {
+  const now = new Date();
+  const localTime = now.getTime() - now.getTimezoneOffset() * 60_000;
+  return new Date(localTime).toISOString().slice(0, 10);
+}
+
+function createEmptyTransactionForm() {
+  return {
+    bookingDate: getLocalDateString(),
+    counterparty: "",
+    iban: "",
+    purpose: "",
+    amount: "",
+    category: "",
+    status: "Gebucht",
+  };
+}
+
 function App() {
+  const modalScrollPositionRef = useRef(0);
   const [name] = useState("Tarik");
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [transactionName, setTransactionName] = useState("");
-  const [amount, setAmount] = useState("");
+  const [transactionForm, setTransactionForm] = useState(
+    createEmptyTransactionForm,
+  );
+  const [transactionMode, setTransactionMode] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -53,32 +76,95 @@ function App() {
     loadCategories();
   }, []);
 
-  async function handleAddTransaction(event) {
+  function resetTransactionForm() {
+    setTransactionForm(createEmptyTransactionForm());
+    setTransactionMode(null);
+    setEditingId(null);
+    setFormError(null);
+  }
+
+  function handleOpenTransactionForm(mode) {
+    modalScrollPositionRef.current = window.scrollY;
+    setTransactionForm(createEmptyTransactionForm());
+    setTransactionMode(mode);
+    setEditingId(null);
+    setFormError(null);
+  }
+
+  function handleTransactionFieldChange(field, value) {
+    setTransactionForm((currentForm) => ({
+      ...currentForm,
+      [field]: value,
+    }));
+  }
+
+  function handleEditTransaction(transaction) {
+    modalScrollPositionRef.current = window.scrollY;
+    setEditingId(transaction.id);
+    setTransactionMode("edit");
+    setTransactionForm({
+      bookingDate: transaction.bookingDate,
+      counterparty: transaction.counterparty,
+      iban: transaction.iban || "",
+      purpose: transaction.purpose || "",
+      amount: String(transaction.amount).replace(".", ","),
+      category: transaction.category || "",
+      status: transaction.status || "",
+    });
+    setFormError(null);
+  }
+
+  async function handleSubmitTransaction(event) {
     event.preventDefault();
     setFormError(null);
 
-    const normalizedName = transactionName.trim();
-    const numericAmount = Number(amount.replace(",", "."));
+    const normalizedName = transactionForm.counterparty.trim();
+    const enteredAmount = Number(transactionForm.amount.replace(",", "."));
+
+    if (!transactionForm.bookingDate) {
+      setFormError("Bitte wähle ein Datum aus.");
+      return;
+    }
 
     if (!normalizedName) {
       setFormError("Bitte gib einen Namen ein.");
       return;
     }
 
-    if (!amount.trim() || !Number.isFinite(numericAmount)) {
+    if (!transactionForm.amount.trim() || !Number.isFinite(enteredAmount)) {
       setFormError("Bitte gib einen gültigen Betrag ein.");
       return;
+    }
+
+    let normalizedAmount = enteredAmount;
+
+    if (editingId === null) {
+      normalizedAmount =
+        transactionMode === "expense"
+          ? -Math.abs(enteredAmount)
+          : Math.abs(enteredAmount);
     }
 
     setIsSubmitting(true);
 
     try {
-      await createTransaction({
+      const transactionData = {
+        bookingDate: transactionForm.bookingDate,
         counterparty: normalizedName,
-        amount: numericAmount,
-      });
-      setTransactionName("");
-      setAmount("");
+        iban: transactionForm.iban.trim(),
+        purpose: transactionForm.purpose.trim(),
+        amount: normalizedAmount,
+        category: transactionForm.category,
+        status: transactionForm.status.trim(),
+      };
+
+      if (editingId === null) {
+        await createTransaction(transactionData);
+      } else {
+        await updateTransaction(editingId, transactionData);
+      }
+
+      resetTransactionForm();
       await loadTransactions();
     } catch (requestError) {
       setFormError(requestError.message);
@@ -93,6 +179,11 @@ function App() {
 
     try {
       await deleteTransaction(id);
+
+      if (editingId === id) {
+        resetTransactionForm();
+      }
+
       await loadTransactions();
     } catch (requestError) {
       setDeleteError(requestError.message);
@@ -150,19 +241,13 @@ function App() {
 
   return (
     <div className="app-shell">
-      <DashboardHeader name={name} />
+      <DashboardHeader
+        name={name}
+        onAddIncome={() => handleOpenTransactionForm("income")}
+        onAddExpense={() => handleOpenTransactionForm("expense")}
+      />
 
       <main className="dashboard-content">
-        <TransactionForm
-          transactionName={transactionName}
-          amount={amount}
-          isSubmitting={isSubmitting}
-          error={formError}
-          onNameChange={setTransactionName}
-          onAmountChange={setAmount}
-          onSubmit={handleAddTransaction}
-        />
-
         <SummaryCards
           balance={balance}
           income={income}
@@ -172,8 +257,10 @@ function App() {
         <TransactionsPanel
           transactions={filteredTransactions}
           totalCount={transactions.length}
+          editingId={editingId}
           deletingId={deletingId}
           deleteError={deleteError}
+          onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
           searchTerm={searchTerm}
           typeFilter={typeFilter}
@@ -184,6 +271,21 @@ function App() {
           onCategoryChange={setCategoryFilter}
         />
       </main>
+
+      {transactionMode !== null && (
+        <TransactionModal
+          transaction={transactionForm}
+          categories={categories}
+          transactionMode={transactionMode}
+          scrollPosition={modalScrollPositionRef.current}
+          isSubmitting={isSubmitting}
+          isEditing={editingId !== null}
+          error={formError}
+          onFieldChange={handleTransactionFieldChange}
+          onSubmit={handleSubmitTransaction}
+          onClose={resetTransactionForm}
+        />
+      )}
     </div>
   );
 }

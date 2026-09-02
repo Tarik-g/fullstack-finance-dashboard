@@ -15,6 +15,18 @@ async function request(path, options, errorMessage) {
   return response.json();
 }
 
+function toApiTransaction(transaction) {
+  return {
+    datum: transaction.bookingDate,
+    empfaenger_sender: transaction.counterparty,
+    iban: transaction.iban || null,
+    verwendungszweck: transaction.purpose || null,
+    betrag_euro: transaction.amount,
+    kategorie: transaction.category || null,
+    status: transaction.status || null,
+  };
+}
+
 export async function getTransactions() {
   const data = await request(
     "/transactions",
@@ -42,19 +54,27 @@ export function getCategories() {
   );
 }
 
-export function createTransaction({ counterparty, amount }) {
+export function createTransaction(transaction) {
   return request(
     "/transactions",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        datum: new Date().toISOString().slice(0, 10),
-        empfaenger_sender: counterparty,
-        betrag_euro: amount,
-      }),
+      body: JSON.stringify(toApiTransaction(transaction)),
     },
     "Transaktion konnte nicht angelegt werden",
+  );
+}
+
+export function updateTransaction(id, transaction) {
+  return request(
+    `/transactions/${id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toApiTransaction(transaction)),
+    },
+    "Transaktion konnte nicht aktualisiert werden",
   );
 }
 

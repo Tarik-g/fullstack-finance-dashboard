@@ -4,8 +4,10 @@ import TransactionRow from "./TransactionRow";
 function TransactionsPanel({
   transactions,
   totalCount,
+  editingId,
   deletingId,
   deleteError,
+  onEdit,
   onDelete,
   searchTerm,
   typeFilter,
@@ -59,7 +61,7 @@ function TransactionsPanel({
           <tbody>
             {transactions.length === 0 ? (
               <tr>
-                <td className="empty-table" colSpan="7">
+                <td className="empty-table" colSpan="7" data-label="Ergebnis">
                   Keine passenden Transaktionen gefunden.
                 </td>
               </tr>
@@ -68,7 +70,9 @@ function TransactionsPanel({
                 <TransactionRow
                   key={transaction.id}
                   transaction={transaction}
+                  onEdit={onEdit}
                   onDelete={onDelete}
+                  isEditing={editingId === transaction.id}
                   isDeleting={deletingId === transaction.id}
                 />
               ))

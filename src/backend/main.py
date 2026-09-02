@@ -32,6 +32,17 @@ class TransactionCreate(BaseModel):
     kategorie: str | None = None
     status: str | None = None
 
+
+class TransactionUpdate(BaseModel):
+    datum: date | None = None
+    empfaenger_sender: str | None = None
+    iban: str | None = None
+    verwendungszweck: str | None = None
+    betrag_euro: Decimal | None = None
+    kategorie: str | None = None
+    status: str | None = None
+
+
 class TransactionResponse(BaseModel):
     id: int
     datum: date
@@ -158,6 +169,73 @@ async def create_transaction(transaction_data: TransactionCreate):
         raise HTTPException(status_code=status.HTTP_201_CREATED, detail={"message": "Transaction inserted successfully."})
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"error": "Failed to insert transaction."})
+
+
+# PATCH /transactions/{id}
+@app.patch(
+    "/transactions/{transaction_id}",
+    response_model=TransactionResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {"description": "No fields supplied"},
+        404: {"description": "Transaction not found"},
+        422: {"description": "Invalid transaction data"},
+        500: {"description": "Database operation failed"},
+    },
+)
+async def update_transaction(
+    transaction_id: int,
+    transaction_data: TransactionUpdate,
+):
+    """Updates only the transaction fields included in the request body."""
+    from .database import get_postgres_connection, update_transaction_by_id
+
+    updates = transaction_data.model_dump(exclude_unset=True)
+
+    if not updates:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "At least one field must be supplied."},
+        )
+
+    connection = get_postgres_connection()
+
+    if connection is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Could not connect to the database."},
+        )
+
+    try:
+        updated_transaction = update_transaction_by_id(
+            connection,
+            transaction_id,
+            updates,
+        )
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"error": "Could not update the transaction."},
+        ) from error
+    finally:
+        connection.close()
+
+    if updated_transaction is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": f"Transaction with ID {transaction_id} not found."},
+        )
+
+    return {
+        "id": updated_transaction[0],
+        "datum": updated_transaction[1],
+        "empfaenger_sender": updated_transaction[2],
+        "iban": updated_transaction[3],
+        "verwendungszweck": updated_transaction[4],
+        "betrag_euro": updated_transaction[5],
+        "kategorie": updated_transaction[6],
+        "status": updated_transaction[7],
+    }
 
 
 # DELETE /transactions/{id}

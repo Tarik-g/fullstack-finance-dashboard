@@ -3,6 +3,7 @@ import psycopg
 
 from dotenv import load_dotenv
 from psycopg import OperationalError
+from psycopg import sql
 
 load_dotenv()
 
@@ -90,13 +91,81 @@ def delete_transaction_by_id(connection, transaction_id):
     try:
         with connection.cursor() as cursor:
             cursor.execute("DELETE FROM public.transactions WHERE id = %s;", (transaction_id,))
+            was_deleted = cursor.rowcount > 0
             connection.commit()
-            print(f"Transaction with ID {transaction_id} deleted successfully.")
-            return True
+
+            if was_deleted:
+                print(f"Transaction with ID {transaction_id} deleted successfully.")
+
+            return was_deleted
     except Exception as e:
         print(f"Error: Could not delete transaction with ID {transaction_id}. {e}")
         connection.rollback()
         return False
+
+
+def update_transaction_by_id(connection, transaction_id, transaction_data):
+    """
+    Updates only the provided fields of a transaction and returns the updated row.
+
+    Args:
+        connection: A psycopg connection object to the PostgreSQL database.
+        transaction_id: The ID of the transaction to update.
+        transaction_data: A dictionary containing the fields to update.
+
+    Returns:
+        tuple | None: The updated transaction, or None if the ID does not exist.
+    """
+    allowed_columns = {
+        "datum",
+        "empfaenger_sender",
+        "iban",
+        "verwendungszweck",
+        "betrag_euro",
+        "kategorie",
+        "status",
+    }
+    fields_to_update = {
+        column: value
+        for column, value in transaction_data.items()
+        if column in allowed_columns
+    }
+
+    if not fields_to_update:
+        return get_transaction_by_id(connection, transaction_id)
+
+    assignments = [
+        sql.SQL("{} = %s").format(sql.Identifier(column))
+        for column in fields_to_update
+    ]
+    update_query = sql.SQL(
+        """
+        UPDATE public.transactions
+        SET {assignments}
+        WHERE id = %s
+        RETURNING
+            id,
+            datum,
+            empfaenger_sender,
+            iban,
+            verwendungszweck,
+            betrag_euro,
+            kategorie,
+            status;
+        """
+    ).format(assignments=sql.SQL(", ").join(assignments))
+    query_values = [*fields_to_update.values(), transaction_id]
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(update_query, query_values)
+            updated_transaction = cursor.fetchone()
+            connection.commit()
+            return updated_transaction
+    except Exception as error:
+        print(f"Error: Could not update transaction with ID {transaction_id}. {error}")
+        connection.rollback()
+        raise
 
 # insert_transaction() selbst mit cursor.execute(...) connection.commit()
 
