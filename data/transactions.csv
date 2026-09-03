@@ -1,31 +1,401 @@
-﻿Datum;Empfänger_Sender;IBAN;Verwendungszweck;Betrag_EURO;Kategorie;Status
-2026-08-01;REWE Markt GmbH;DE89370400440532013000;Einkauf Lebensmittel kartenzahlung;-45.82;Lebensmittel;Gebucht
-2026-08-01;Arbeitgeber GmbH;DE45100100100123456789;Gehalt 08/2026;2850.0;Gehalt;Gebucht
-2026-08-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom/Gas 08/2026;-128.5;Nebenkosten;Gebucht
-2026-08-05;Netflix International B.V.;DE55500105170123456789;Monatsabo Premium;-17.99;Unterhaltung;Gebucht
-2026-08-08;Aral Tankstelle;DE77200400000123456789;Kraftstoff Super E10;-65.4;Transport;Gebucht
-2026-08-10;Max Mustermann;DE91100100100987654321;Rückzahlung Abendessen;25.0;Gutschrift;Gebucht
-2026-08-12;Amazon Payments Europe;DE33500700100876543210;Bestellung #302-8192011-12345;-34.9;Online-Shopping;Gebucht
-2026-08-15;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag Aug 2026;-29.99;Telekommunikation;Gebucht
-2026-08-18;Bäckerei Müller;DE66700800000112233445;Kontaktlos-Zahlung;-6.4;Gastronomie;Gebucht
-2026-08-20;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 08/2026;-49.9;Sport & Freizeit;Gebucht
-2026-05-01;Arbeitgeber GmbH;DE45100100100123456789;Gehalt 05/2026;2850.0;Gehalt;Gebucht
-2026-05-02;REWE Markt GmbH;DE89370400440532013000;Einkauf Lebensmittel kartenzahlung;-62.15;Lebensmittel;Gebucht
-2026-05-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom/Gas 05/2026;-128.5;Nebenkosten;Gebucht
-2026-05-14;IKEA Deutschland;DE44500105170987654321;Möbel & Deko Einkauf;-184.90;Wohnen;Gebucht
-2026-05-22;DB Vertrieb GmbH;DE11200300000123456789;Bahnticket Heimfahrt;-49.0;Transport;Gebucht
-2026-06-01;Arbeitgeber GmbH;DE45100100100123456789;Gehalt 06/2026;2850.0;Gehalt;Gebucht
-2026-06-02;Kaufland SE & Co. KG;DE89370400440532099999;Einkauf Lebensmittel;-83.40;Lebensmittel;Gebucht
-2026-06-05;Spotify AB;DE55500105170123411111;Premium Individual Abo;-10.99;Unterhaltung;Gebucht
-2026-06-15;Allianz SE;DE33200400000554433221;Haftpflichtversicherung 2026;-78.60;Versicherungen;Gebucht
-2026-06-25;Apotheke am Markt;DE66700800000998811223;Medikamente Rezept;-18.45;Gesundheit;Gebucht
-2026-07-01;Arbeitgeber GmbH;DE45100100100123456789;Gehalt 07/2026;2850.0;Gehalt;Gebucht
-2026-07-04;Lidl Dienstleistung;DE89370400440532044444;Wocheneinkauf;-51.30;Lebensmittel;Gebucht
-2026-07-11;Shell Tankstelle;DE77200400000123499999;Kraftstoff Super E10;-72.10;Transport;Gebucht
-2026-07-16;Zalando SE;DE33500700100876500000;Bestellung #1020492;-89.95;Bekleidung;Gebucht
-2026-07-28;Restaurant Post;DE66700800000112288888;Abendessen mit Freunden;-42.50;Gastronomie;Gebucht
-2026-09-01;Arbeitgeber GmbH;DE45100100100123456789;Gehalt 09/2026;2850.0;Gehalt;Gebucht
-2026-09-02;REWE Markt GmbH;DE89370400440532013000;Einkauf Lebensmittel kartenzahlung;-54.20;Lebensmittel;Gebucht
-2026-09-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom/Gas 09/2026;-128.5;Nebenkosten;Gebucht
-2026-09-07;Apple Distribution International;DE55500105170888888888;iCloud+ Speicher 200GB;-2.99;Online-Shopping;Gebucht
-2026-09-14;EBay Managed Payments;DE33500700100111122233;Verkauf Gebrauchtware;45.0;Gutschrift;Gebucht
+Datum;Empfänger_Sender;IBAN;Verwendungszweck;Betrag_EURO;Kategorie;Status
+2025-01-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 01/2025;3050.00;Gehalt;Gebucht
+2025-01-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 01/2025;-1020.00;Wohnen;Gebucht
+2025-01-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 01/2025;-138.00;Nebenkosten;Gebucht
+2025-01-04;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-66.01;Lebensmittel;Gebucht
+2025-01-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 01/2025;-29.99;Telekommunikation;Gebucht
+2025-01-06;Spotify AB;DE55500105170123411111;Premium-Abo 01/2025;-10.99;Unterhaltung;Gebucht
+2025-01-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 01/2025;-39.90;Sport & Freizeit;Gebucht
+2025-01-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 01/2025;-17.99;Unterhaltung;Gebucht
+2025-01-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 01/2025;-58.00;Transport;Gebucht
+2025-01-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q1/2025;-82.50;Versicherungen;Gebucht
+2025-01-11;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-43.88;Lebensmittel;Gebucht
+2025-01-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-5.37;Gastronomie;Gebucht
+2025-01-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-19.64;Drogerie & Haushalt;Gebucht
+2025-01-18;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-50.24;Lebensmittel;Gebucht
+2025-01-22;Burgermeister GmbH;DE66700800000112233445;Restaurantbesuch;-54.38;Gastronomie;Gebucht
+2025-01-25;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-45.81;Lebensmittel;Gebucht
+2025-01-27;OTTO GmbH;DE33500700100876543210;Winterkleidung;-71.06;Bekleidung;Gebucht
+2025-02-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 02/2025;3050.00;Gehalt;Gebucht
+2025-02-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 02/2025;-1020.00;Wohnen;Gebucht
+2025-02-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 02/2025;-138.00;Nebenkosten;Gebucht
+2025-02-04;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-88.80;Lebensmittel;Gebucht
+2025-02-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 02/2025;-29.99;Telekommunikation;Gebucht
+2025-02-06;Spotify AB;DE55500105170123411111;Premium-Abo 02/2025;-10.99;Unterhaltung;Gebucht
+2025-02-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 02/2025;-39.90;Sport & Freizeit;Gebucht
+2025-02-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 02/2025;-17.99;Unterhaltung;Gebucht
+2025-02-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 02/2025;-58.00;Transport;Gebucht
+2025-02-11;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-51.81;Lebensmittel;Gebucht
+2025-02-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-5.35;Gastronomie;Gebucht
+2025-02-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-25.23;Drogerie & Haushalt;Gebucht
+2025-02-18;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-38.11;Lebensmittel;Gebucht
+2025-02-22;Sushi House;DE66700800000112233445;Restaurantbesuch;-52.98;Gastronomie;Gebucht
+2025-02-25;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-57.48;Lebensmittel;Gebucht
+2025-02-27;MediaMarkt;DE33500700100876543210;Kopfhörer und Zubehör;-113.01;Elektronik;Gebucht
+2025-03-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 03/2025;3050.00;Gehalt;Gebucht
+2025-03-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 03/2025;-1020.00;Wohnen;Gebucht
+2025-03-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 03/2025;-138.00;Nebenkosten;Gebucht
+2025-03-04;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-49.71;Lebensmittel;Gebucht
+2025-03-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 03/2025;-29.99;Telekommunikation;Gebucht
+2025-03-06;Spotify AB;DE55500105170123411111;Premium-Abo 03/2025;-10.99;Unterhaltung;Gebucht
+2025-03-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 03/2025;-39.90;Sport & Freizeit;Gebucht
+2025-03-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 03/2025;-17.99;Unterhaltung;Gebucht
+2025-03-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 03/2025;-58.00;Transport;Gebucht
+2025-03-11;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-84.52;Lebensmittel;Gebucht
+2025-03-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-7.95;Gastronomie;Gebucht
+2025-03-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-42.21;Drogerie & Haushalt;Gebucht
+2025-03-18;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-45.45;Lebensmittel;Gebucht
+2025-03-20;Kleinanzeigen Käufer;DE91100100100987654321;Verkauf Gebrauchtware;128.47;Gutschrift;Gebucht
+2025-03-22;Café Morgenrot;DE66700800000112233445;Restaurantbesuch;-67.08;Gastronomie;Gebucht
+2025-03-25;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-62.54;Lebensmittel;Gebucht
+2025-03-27;DB Vertrieb GmbH;DE11200300000123456789;Wochenendfahrt;-77.30;Reisen;Gebucht
+2025-04-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 04/2025;3050.00;Gehalt;Gebucht
+2025-04-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 04/2025;-1020.00;Wohnen;Gebucht
+2025-04-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 04/2025;-138.00;Nebenkosten;Gebucht
+2025-04-04;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-59.40;Lebensmittel;Gebucht
+2025-04-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 04/2025;-29.99;Telekommunikation;Gebucht
+2025-04-06;Spotify AB;DE55500105170123411111;Premium-Abo 04/2025;-10.99;Unterhaltung;Gebucht
+2025-04-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 04/2025;-39.90;Sport & Freizeit;Gebucht
+2025-04-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 04/2025;-17.99;Unterhaltung;Gebucht
+2025-04-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 04/2025;-58.00;Transport;Gebucht
+2025-04-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q2/2025;-82.50;Versicherungen;Gebucht
+2025-04-11;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-69.94;Lebensmittel;Gebucht
+2025-04-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-6.21;Gastronomie;Gebucht
+2025-04-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-46.78;Drogerie & Haushalt;Gebucht
+2025-04-18;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-58.76;Lebensmittel;Gebucht
+2025-04-22;Trattoria Milano;DE66700800000112233445;Restaurantbesuch;-45.76;Gastronomie;Gebucht
+2025-04-25;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-83.21;Lebensmittel;Gebucht
+2025-04-27;Amazon Payments Europe;DE33500700100876543210;Haushaltsbestellung;-84.53;Online-Shopping;Gebucht
+2025-05-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 05/2025;3050.00;Gehalt;Gebucht
+2025-05-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 05/2025;-1020.00;Wohnen;Gebucht
+2025-05-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 05/2025;-138.00;Nebenkosten;Gebucht
+2025-05-04;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-51.03;Lebensmittel;Gebucht
+2025-05-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 05/2025;-29.99;Telekommunikation;Gebucht
+2025-05-06;Spotify AB;DE55500105170123411111;Premium-Abo 05/2025;-10.99;Unterhaltung;Gebucht
+2025-05-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 05/2025;-39.90;Sport & Freizeit;Gebucht
+2025-05-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 05/2025;-17.99;Unterhaltung;Gebucht
+2025-05-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 05/2025;-58.00;Transport;Gebucht
+2025-05-11;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-39.25;Lebensmittel;Gebucht
+2025-05-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-9.17;Gastronomie;Gebucht
+2025-05-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-32.46;Drogerie & Haushalt;Gebucht
+2025-05-18;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-66.91;Lebensmittel;Gebucht
+2025-05-22;Burgermeister GmbH;DE66700800000112233445;Restaurantbesuch;-46.38;Gastronomie;Gebucht
+2025-05-25;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-60.25;Lebensmittel;Gebucht
+2025-05-27;IKEA Deutschland;DE44500105170987654321;Möbel und Dekoration;-83.88;Wohnen;Gebucht
+2025-06-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 06/2025;3050.00;Gehalt;Gebucht
+2025-06-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 06/2025;-1020.00;Wohnen;Gebucht
+2025-06-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 06/2025;-138.00;Nebenkosten;Gebucht
+2025-06-04;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-89.20;Lebensmittel;Gebucht
+2025-06-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 06/2025;-29.99;Telekommunikation;Gebucht
+2025-06-06;Spotify AB;DE55500105170123411111;Premium-Abo 06/2025;-10.99;Unterhaltung;Gebucht
+2025-06-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 06/2025;-39.90;Sport & Freizeit;Gebucht
+2025-06-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 06/2025;-17.99;Unterhaltung;Gebucht
+2025-06-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 06/2025;-58.00;Transport;Gebucht
+2025-06-11;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-58.83;Lebensmittel;Gebucht
+2025-06-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-6.95;Gastronomie;Gebucht
+2025-06-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-39.69;Drogerie & Haushalt;Gebucht
+2025-06-18;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-70.52;Lebensmittel;Gebucht
+2025-06-22;Sushi House;DE66700800000112233445;Restaurantbesuch;-44.23;Gastronomie;Gebucht
+2025-06-25;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-71.17;Lebensmittel;Gebucht
+2025-06-27;Booking.com;DE33500700100876543210;Sommerurlaub Anzahlung;-267.51;Reisen;Gebucht
+2025-07-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 07/2025;3175.00;Gehalt;Gebucht
+2025-07-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 07/2025;-1020.00;Wohnen;Gebucht
+2025-07-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 07/2025;-138.00;Nebenkosten;Gebucht
+2025-07-04;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-46.00;Lebensmittel;Gebucht
+2025-07-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 07/2025;-29.99;Telekommunikation;Gebucht
+2025-07-06;Spotify AB;DE55500105170123411111;Premium-Abo 07/2025;-10.99;Unterhaltung;Gebucht
+2025-07-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 07/2025;-39.90;Sport & Freizeit;Gebucht
+2025-07-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 07/2025;-17.99;Unterhaltung;Gebucht
+2025-07-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 07/2025;-58.00;Transport;Gebucht
+2025-07-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q3/2025;-82.50;Versicherungen;Gebucht
+2025-07-11;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-81.29;Lebensmittel;Gebucht
+2025-07-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-9.14;Gastronomie;Gebucht
+2025-07-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-35.57;Drogerie & Haushalt;Gebucht
+2025-07-18;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-52.01;Lebensmittel;Gebucht
+2025-07-22;Café Morgenrot;DE66700800000112233445;Restaurantbesuch;-55.94;Gastronomie;Gebucht
+2025-07-25;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-91.40;Lebensmittel;Gebucht
+2025-07-27;Zalando SE;DE33500700100876543210;Sommerkleidung;-134.92;Bekleidung;Gebucht
+2025-08-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 08/2025;3175.00;Gehalt;Gebucht
+2025-08-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 08/2025;-1020.00;Wohnen;Gebucht
+2025-08-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 08/2025;-138.00;Nebenkosten;Gebucht
+2025-08-04;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-74.11;Lebensmittel;Gebucht
+2025-08-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 08/2025;-29.99;Telekommunikation;Gebucht
+2025-08-06;Spotify AB;DE55500105170123411111;Premium-Abo 08/2025;-10.99;Unterhaltung;Gebucht
+2025-08-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 08/2025;-39.90;Sport & Freizeit;Gebucht
+2025-08-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 08/2025;-17.99;Unterhaltung;Gebucht
+2025-08-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 08/2025;-58.00;Transport;Gebucht
+2025-08-11;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-65.89;Lebensmittel;Gebucht
+2025-08-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-5.41;Gastronomie;Gebucht
+2025-08-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-46.48;Drogerie & Haushalt;Gebucht
+2025-08-18;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-72.91;Lebensmittel;Gebucht
+2025-08-20;Kleinanzeigen Käufer;DE91100100100987654321;Verkauf Gebrauchtware;135.97;Gutschrift;Gebucht
+2025-08-22;Trattoria Milano;DE66700800000112233445;Restaurantbesuch;-32.16;Gastronomie;Gebucht
+2025-08-25;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-53.89;Lebensmittel;Gebucht
+2025-08-27;Eventim Deutschland;DE33500700100876543210;Konzertticket;-55.93;Freizeit;Gebucht
+2025-09-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 09/2025;3175.00;Gehalt;Gebucht
+2025-09-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 09/2025;-1020.00;Wohnen;Gebucht
+2025-09-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 09/2025;-138.00;Nebenkosten;Gebucht
+2025-09-04;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-77.14;Lebensmittel;Gebucht
+2025-09-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 09/2025;-29.99;Telekommunikation;Gebucht
+2025-09-06;Spotify AB;DE55500105170123411111;Premium-Abo 09/2025;-10.99;Unterhaltung;Gebucht
+2025-09-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 09/2025;-39.90;Sport & Freizeit;Gebucht
+2025-09-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 09/2025;-17.99;Unterhaltung;Gebucht
+2025-09-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 09/2025;-58.00;Transport;Gebucht
+2025-09-11;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-39.96;Lebensmittel;Gebucht
+2025-09-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-5.59;Gastronomie;Gebucht
+2025-09-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-35.37;Drogerie & Haushalt;Gebucht
+2025-09-18;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-85.95;Lebensmittel;Gebucht
+2025-09-22;Burgermeister GmbH;DE66700800000112233445;Restaurantbesuch;-44.81;Gastronomie;Gebucht
+2025-09-25;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-73.84;Lebensmittel;Gebucht
+2025-09-27;Apotheke am Markt;DE66700800000112233445;Medikamente und Pflege;-53.51;Gesundheit;Gebucht
+2025-10-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 10/2025;3175.00;Gehalt;Gebucht
+2025-10-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 10/2025;-1020.00;Wohnen;Gebucht
+2025-10-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 10/2025;-138.00;Nebenkosten;Gebucht
+2025-10-04;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-88.45;Lebensmittel;Gebucht
+2025-10-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 10/2025;-29.99;Telekommunikation;Gebucht
+2025-10-06;Spotify AB;DE55500105170123411111;Premium-Abo 10/2025;-10.99;Unterhaltung;Gebucht
+2025-10-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 10/2025;-39.90;Sport & Freizeit;Gebucht
+2025-10-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 10/2025;-17.99;Unterhaltung;Gebucht
+2025-10-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 10/2025;-58.00;Transport;Gebucht
+2025-10-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q4/2025;-82.50;Versicherungen;Gebucht
+2025-10-11;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-72.76;Lebensmittel;Gebucht
+2025-10-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-12.38;Gastronomie;Gebucht
+2025-10-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-22.69;Drogerie & Haushalt;Gebucht
+2025-10-18;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-76.24;Lebensmittel;Gebucht
+2025-10-22;Sushi House;DE66700800000112233445;Restaurantbesuch;-32.89;Gastronomie;Gebucht
+2025-10-25;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-82.29;Lebensmittel;Gebucht
+2025-10-27;IKEA Deutschland;DE44500105170987654321;Haushalt und Aufbewahrung;-51.72;Wohnen;Gebucht
+2025-11-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 11/2025;3175.00;Gehalt;Gebucht
+2025-11-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 11/2025;-1020.00;Wohnen;Gebucht
+2025-11-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 11/2025;-138.00;Nebenkosten;Gebucht
+2025-11-04;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-93.45;Lebensmittel;Gebucht
+2025-11-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 11/2025;-29.99;Telekommunikation;Gebucht
+2025-11-06;Spotify AB;DE55500105170123411111;Premium-Abo 11/2025;-10.99;Unterhaltung;Gebucht
+2025-11-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 11/2025;-39.90;Sport & Freizeit;Gebucht
+2025-11-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 11/2025;-17.99;Unterhaltung;Gebucht
+2025-11-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 11/2025;-58.00;Transport;Gebucht
+2025-11-11;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-77.92;Lebensmittel;Gebucht
+2025-11-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-7.07;Gastronomie;Gebucht
+2025-11-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-35.60;Drogerie & Haushalt;Gebucht
+2025-11-18;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-89.74;Lebensmittel;Gebucht
+2025-11-20;Kleinanzeigen Käufer;DE91100100100987654321;Verkauf Gebrauchtware;133.59;Gutschrift;Gebucht
+2025-11-22;Café Morgenrot;DE66700800000112233445;Restaurantbesuch;-48.15;Gastronomie;Gebucht
+2025-11-25;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-73.35;Lebensmittel;Gebucht
+2025-11-27;Amazon Payments Europe;DE33500700100876543210;Black-Friday-Bestellung;-186.54;Online-Shopping;Gebucht
+2025-11-28;Nordstern Digital GmbH;DE45100100100123456789;Jahresbonus 2025;750.00;Bonus;Gebucht
+2025-12-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 12/2025;3175.00;Gehalt;Gebucht
+2025-12-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 12/2025;-1020.00;Wohnen;Gebucht
+2025-12-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 12/2025;-138.00;Nebenkosten;Gebucht
+2025-12-04;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-43.88;Lebensmittel;Gebucht
+2025-12-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 12/2025;-29.99;Telekommunikation;Gebucht
+2025-12-06;Spotify AB;DE55500105170123411111;Premium-Abo 12/2025;-10.99;Unterhaltung;Gebucht
+2025-12-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 12/2025;-39.90;Sport & Freizeit;Gebucht
+2025-12-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 12/2025;-17.99;Unterhaltung;Gebucht
+2025-12-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 12/2025;-58.00;Transport;Gebucht
+2025-12-11;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-84.57;Lebensmittel;Gebucht
+2025-12-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-7.32;Gastronomie;Gebucht
+2025-12-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-25.38;Drogerie & Haushalt;Gebucht
+2025-12-18;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-52.24;Lebensmittel;Gebucht
+2025-12-22;Trattoria Milano;DE66700800000112233445;Restaurantbesuch;-38.07;Gastronomie;Gebucht
+2025-12-25;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-74.40;Lebensmittel;Gebucht
+2025-12-27;Galeria;DE33500700100876543210;Weihnachtsgeschenke;-137.51;Geschenke;Gebucht
+2026-01-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 01/2026;3250.00;Gehalt;Gebucht
+2026-01-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 01/2026;-1060.00;Wohnen;Gebucht
+2026-01-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 01/2026;-146.00;Nebenkosten;Gebucht
+2026-01-04;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-48.86;Lebensmittel;Gebucht
+2026-01-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 01/2026;-29.99;Telekommunikation;Gebucht
+2026-01-06;Spotify AB;DE55500105170123411111;Premium-Abo 01/2026;-10.99;Unterhaltung;Gebucht
+2026-01-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 01/2026;-39.90;Sport & Freizeit;Gebucht
+2026-01-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 01/2026;-17.99;Unterhaltung;Gebucht
+2026-01-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 01/2026;-58.00;Transport;Gebucht
+2026-01-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q1/2026;-86.90;Versicherungen;Gebucht
+2026-01-11;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-49.97;Lebensmittel;Gebucht
+2026-01-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-10.91;Gastronomie;Gebucht
+2026-01-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-36.17;Drogerie & Haushalt;Gebucht
+2026-01-18;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-60.89;Lebensmittel;Gebucht
+2026-01-22;Sushi House;DE66700800000112233445;Restaurantbesuch;-56.90;Gastronomie;Gebucht
+2026-01-25;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-45.06;Lebensmittel;Gebucht
+2026-01-27;OTTO GmbH;DE33500700100876543210;Winterkleidung;-76.59;Bekleidung;Gebucht
+2026-02-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 02/2026;3250.00;Gehalt;Gebucht
+2026-02-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 02/2026;-1060.00;Wohnen;Gebucht
+2026-02-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 02/2026;-146.00;Nebenkosten;Gebucht
+2026-02-04;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-54.61;Lebensmittel;Gebucht
+2026-02-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 02/2026;-29.99;Telekommunikation;Gebucht
+2026-02-06;Spotify AB;DE55500105170123411111;Premium-Abo 02/2026;-10.99;Unterhaltung;Gebucht
+2026-02-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 02/2026;-39.90;Sport & Freizeit;Gebucht
+2026-02-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 02/2026;-17.99;Unterhaltung;Gebucht
+2026-02-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 02/2026;-58.00;Transport;Gebucht
+2026-02-11;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-67.17;Lebensmittel;Gebucht
+2026-02-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-11.12;Gastronomie;Gebucht
+2026-02-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-23.44;Drogerie & Haushalt;Gebucht
+2026-02-18;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-57.97;Lebensmittel;Gebucht
+2026-02-22;Café Morgenrot;DE66700800000112233445;Restaurantbesuch;-49.66;Gastronomie;Gebucht
+2026-02-25;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-90.26;Lebensmittel;Gebucht
+2026-02-27;MediaMarkt;DE33500700100876543210;Kopfhörer und Zubehör;-144.50;Elektronik;Gebucht
+2026-03-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 03/2026;3250.00;Gehalt;Gebucht
+2026-03-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 03/2026;-1060.00;Wohnen;Gebucht
+2026-03-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 03/2026;-146.00;Nebenkosten;Gebucht
+2026-03-04;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-83.88;Lebensmittel;Gebucht
+2026-03-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 03/2026;-29.99;Telekommunikation;Gebucht
+2026-03-06;Spotify AB;DE55500105170123411111;Premium-Abo 03/2026;-10.99;Unterhaltung;Gebucht
+2026-03-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 03/2026;-39.90;Sport & Freizeit;Gebucht
+2026-03-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 03/2026;-17.99;Unterhaltung;Gebucht
+2026-03-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 03/2026;-58.00;Transport;Gebucht
+2026-03-11;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-89.61;Lebensmittel;Gebucht
+2026-03-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-10.17;Gastronomie;Gebucht
+2026-03-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-19.55;Drogerie & Haushalt;Gebucht
+2026-03-18;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-67.94;Lebensmittel;Gebucht
+2026-03-20;Kleinanzeigen Käufer;DE91100100100987654321;Verkauf Gebrauchtware;141.02;Gutschrift;Gebucht
+2026-03-22;Trattoria Milano;DE66700800000112233445;Restaurantbesuch;-52.48;Gastronomie;Gebucht
+2026-03-25;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-91.23;Lebensmittel;Gebucht
+2026-03-27;DB Vertrieb GmbH;DE11200300000123456789;Wochenendfahrt;-95.58;Reisen;Gebucht
+2026-04-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 04/2026;3250.00;Gehalt;Gebucht
+2026-04-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 04/2026;-1060.00;Wohnen;Gebucht
+2026-04-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 04/2026;-146.00;Nebenkosten;Gebucht
+2026-04-04;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-39.92;Lebensmittel;Gebucht
+2026-04-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 04/2026;-29.99;Telekommunikation;Gebucht
+2026-04-06;Spotify AB;DE55500105170123411111;Premium-Abo 04/2026;-10.99;Unterhaltung;Gebucht
+2026-04-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 04/2026;-39.90;Sport & Freizeit;Gebucht
+2026-04-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 04/2026;-17.99;Unterhaltung;Gebucht
+2026-04-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 04/2026;-58.00;Transport;Gebucht
+2026-04-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q2/2026;-86.90;Versicherungen;Gebucht
+2026-04-11;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-89.91;Lebensmittel;Gebucht
+2026-04-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-6.30;Gastronomie;Gebucht
+2026-04-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-38.91;Drogerie & Haushalt;Gebucht
+2026-04-18;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-82.70;Lebensmittel;Gebucht
+2026-04-22;Burgermeister GmbH;DE66700800000112233445;Restaurantbesuch;-28.89;Gastronomie;Gebucht
+2026-04-25;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-88.14;Lebensmittel;Gebucht
+2026-04-27;Amazon Payments Europe;DE33500700100876543210;Haushaltsbestellung;-47.19;Online-Shopping;Gebucht
+2026-05-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 05/2026;3250.00;Gehalt;Gebucht
+2026-05-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 05/2026;-1060.00;Wohnen;Gebucht
+2026-05-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 05/2026;-146.00;Nebenkosten;Gebucht
+2026-05-04;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-47.74;Lebensmittel;Gebucht
+2026-05-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 05/2026;-29.99;Telekommunikation;Gebucht
+2026-05-06;Spotify AB;DE55500105170123411111;Premium-Abo 05/2026;-10.99;Unterhaltung;Gebucht
+2026-05-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 05/2026;-39.90;Sport & Freizeit;Gebucht
+2026-05-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 05/2026;-17.99;Unterhaltung;Gebucht
+2026-05-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 05/2026;-58.00;Transport;Gebucht
+2026-05-11;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-84.74;Lebensmittel;Gebucht
+2026-05-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-6.06;Gastronomie;Gebucht
+2026-05-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-27.90;Drogerie & Haushalt;Gebucht
+2026-05-18;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-75.80;Lebensmittel;Gebucht
+2026-05-22;Sushi House;DE66700800000112233445;Restaurantbesuch;-48.19;Gastronomie;Gebucht
+2026-05-25;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-54.14;Lebensmittel;Gebucht
+2026-05-27;IKEA Deutschland;DE44500105170987654321;Möbel und Dekoration;-142.48;Wohnen;Gebucht
+2026-06-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 06/2026;3250.00;Gehalt;Gebucht
+2026-06-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 06/2026;-1060.00;Wohnen;Gebucht
+2026-06-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 06/2026;-146.00;Nebenkosten;Gebucht
+2026-06-04;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-85.79;Lebensmittel;Gebucht
+2026-06-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 06/2026;-29.99;Telekommunikation;Gebucht
+2026-06-06;Spotify AB;DE55500105170123411111;Premium-Abo 06/2026;-10.99;Unterhaltung;Gebucht
+2026-06-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 06/2026;-39.90;Sport & Freizeit;Gebucht
+2026-06-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 06/2026;-17.99;Unterhaltung;Gebucht
+2026-06-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 06/2026;-58.00;Transport;Gebucht
+2026-06-11;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-70.21;Lebensmittel;Gebucht
+2026-06-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-10.41;Gastronomie;Gebucht
+2026-06-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-47.18;Drogerie & Haushalt;Gebucht
+2026-06-18;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-84.84;Lebensmittel;Gebucht
+2026-06-22;Café Morgenrot;DE66700800000112233445;Restaurantbesuch;-37.78;Gastronomie;Gebucht
+2026-06-25;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-65.40;Lebensmittel;Gebucht
+2026-06-27;Booking.com;DE33500700100876543210;Sommerurlaub Anzahlung;-312.11;Reisen;Gebucht
+2026-07-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 07/2026;3380.00;Gehalt;Gebucht
+2026-07-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 07/2026;-1060.00;Wohnen;Gebucht
+2026-07-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 07/2026;-146.00;Nebenkosten;Gebucht
+2026-07-04;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-51.58;Lebensmittel;Gebucht
+2026-07-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 07/2026;-29.99;Telekommunikation;Gebucht
+2026-07-06;Spotify AB;DE55500105170123411111;Premium-Abo 07/2026;-10.99;Unterhaltung;Gebucht
+2026-07-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 07/2026;-39.90;Sport & Freizeit;Gebucht
+2026-07-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 07/2026;-17.99;Unterhaltung;Gebucht
+2026-07-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 07/2026;-58.00;Transport;Gebucht
+2026-07-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q3/2026;-86.90;Versicherungen;Gebucht
+2026-07-11;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-72.33;Lebensmittel;Gebucht
+2026-07-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-7.57;Gastronomie;Gebucht
+2026-07-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-45.75;Drogerie & Haushalt;Gebucht
+2026-07-18;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-74.05;Lebensmittel;Gebucht
+2026-07-22;Trattoria Milano;DE66700800000112233445;Restaurantbesuch;-35.54;Gastronomie;Gebucht
+2026-07-25;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-59.79;Lebensmittel;Gebucht
+2026-07-27;Zalando SE;DE33500700100876543210;Sommerkleidung;-91.51;Bekleidung;Gebucht
+2026-08-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 08/2026;3380.00;Gehalt;Gebucht
+2026-08-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 08/2026;-1060.00;Wohnen;Gebucht
+2026-08-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 08/2026;-146.00;Nebenkosten;Gebucht
+2026-08-04;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-64.52;Lebensmittel;Gebucht
+2026-08-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 08/2026;-29.99;Telekommunikation;Gebucht
+2026-08-06;Spotify AB;DE55500105170123411111;Premium-Abo 08/2026;-10.99;Unterhaltung;Gebucht
+2026-08-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 08/2026;-39.90;Sport & Freizeit;Gebucht
+2026-08-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 08/2026;-17.99;Unterhaltung;Gebucht
+2026-08-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 08/2026;-58.00;Transport;Gebucht
+2026-08-11;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-82.77;Lebensmittel;Gebucht
+2026-08-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-12.32;Gastronomie;Gebucht
+2026-08-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-35.91;Drogerie & Haushalt;Gebucht
+2026-08-18;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-57.40;Lebensmittel;Gebucht
+2026-08-20;Kleinanzeigen Käufer;DE91100100100987654321;Verkauf Gebrauchtware;64.08;Gutschrift;Gebucht
+2026-08-22;Burgermeister GmbH;DE66700800000112233445;Restaurantbesuch;-43.20;Gastronomie;Gebucht
+2026-08-25;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-63.21;Lebensmittel;Gebucht
+2026-08-27;Eventim Deutschland;DE33500700100876543210;Konzertticket;-108.76;Freizeit;Gebucht
+2026-09-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 09/2026;3380.00;Gehalt;Gebucht
+2026-09-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 09/2026;-1060.00;Wohnen;Gebucht
+2026-09-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 09/2026;-146.00;Nebenkosten;Gebucht
+2026-09-04;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-50.20;Lebensmittel;Gebucht
+2026-09-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 09/2026;-29.99;Telekommunikation;Gebucht
+2026-09-06;Spotify AB;DE55500105170123411111;Premium-Abo 09/2026;-10.99;Unterhaltung;Gebucht
+2026-09-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 09/2026;-39.90;Sport & Freizeit;Gebucht
+2026-09-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 09/2026;-17.99;Unterhaltung;Gebucht
+2026-09-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 09/2026;-58.00;Transport;Gebucht
+2026-09-11;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-43.53;Lebensmittel;Gebucht
+2026-09-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-7.20;Gastronomie;Gebucht
+2026-09-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-31.42;Drogerie & Haushalt;Gebucht
+2026-09-18;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-40.18;Lebensmittel;Gebucht
+2026-09-22;Sushi House;DE66700800000112233445;Restaurantbesuch;-40.14;Gastronomie;Gebucht
+2026-09-25;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-41.29;Lebensmittel;Gebucht
+2026-09-27;Apotheke am Markt;DE66700800000112233445;Medikamente und Pflege;-53.21;Gesundheit;Gebucht
+2026-10-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 10/2026;3380.00;Gehalt;Gebucht
+2026-10-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 10/2026;-1060.00;Wohnen;Gebucht
+2026-10-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 10/2026;-146.00;Nebenkosten;Gebucht
+2026-10-04;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-43.83;Lebensmittel;Gebucht
+2026-10-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 10/2026;-29.99;Telekommunikation;Gebucht
+2026-10-06;Spotify AB;DE55500105170123411111;Premium-Abo 10/2026;-10.99;Unterhaltung;Gebucht
+2026-10-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 10/2026;-39.90;Sport & Freizeit;Gebucht
+2026-10-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 10/2026;-17.99;Unterhaltung;Gebucht
+2026-10-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 10/2026;-58.00;Transport;Gebucht
+2026-10-10;Allianz Versicherungs-AG;DE33200400000554433221;Versicherungsbeitrag Q4/2026;-86.90;Versicherungen;Gebucht
+2026-10-11;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-80.75;Lebensmittel;Gebucht
+2026-10-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-6.62;Gastronomie;Gebucht
+2026-10-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-46.26;Drogerie & Haushalt;Gebucht
+2026-10-18;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-81.40;Lebensmittel;Gebucht
+2026-10-22;Café Morgenrot;DE66700800000112233445;Restaurantbesuch;-50.88;Gastronomie;Gebucht
+2026-10-25;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-47.62;Lebensmittel;Gebucht
+2026-10-27;IKEA Deutschland;DE44500105170987654321;Haushalt und Aufbewahrung;-78.68;Wohnen;Gebucht
+2026-11-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 11/2026;3380.00;Gehalt;Gebucht
+2026-11-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 11/2026;-1060.00;Wohnen;Gebucht
+2026-11-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 11/2026;-146.00;Nebenkosten;Gebucht
+2026-11-04;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-68.48;Lebensmittel;Gebucht
+2026-11-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 11/2026;-29.99;Telekommunikation;Gebucht
+2026-11-06;Spotify AB;DE55500105170123411111;Premium-Abo 11/2026;-10.99;Unterhaltung;Gebucht
+2026-11-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 11/2026;-39.90;Sport & Freizeit;Gebucht
+2026-11-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 11/2026;-17.99;Unterhaltung;Gebucht
+2026-11-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 11/2026;-58.00;Transport;Gebucht
+2026-11-11;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-79.50;Lebensmittel;Gebucht
+2026-11-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-6.52;Gastronomie;Gebucht
+2026-11-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-47.76;Drogerie & Haushalt;Gebucht
+2026-11-18;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-80.95;Lebensmittel;Gebucht
+2026-11-20;Kleinanzeigen Käufer;DE91100100100987654321;Verkauf Gebrauchtware;77.69;Gutschrift;Gebucht
+2026-11-22;Trattoria Milano;DE66700800000112233445;Restaurantbesuch;-42.61;Gastronomie;Gebucht
+2026-11-25;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-39.17;Lebensmittel;Gebucht
+2026-11-27;Amazon Payments Europe;DE33500700100876543210;Black-Friday-Bestellung;-148.72;Online-Shopping;Gebucht
+2026-11-28;Nordstern Digital GmbH;DE45100100100123456789;Jahresbonus 2026;900.00;Bonus;Gebucht
+2026-12-01;Nordstern Digital GmbH;DE45100100100123456789;Gehalt 12/2026;3380.00;Gehalt;Gebucht
+2026-12-02;Rheinblick Immobilien GmbH;DE12500105170648489890;Miete 12/2026;-1060.00;Wohnen;Gebucht
+2026-12-03;Stadtwerke Musterstadt;DE12300200300011223344;Abschlag Strom und Gas 12/2026;-146.00;Nebenkosten;Gebucht
+2026-12-04;Lidl Dienstleistung GmbH;DE89370400440532013000;Lebensmitteleinkauf;-50.02;Lebensmittel;Gebucht
+2026-12-05;Vodafone GmbH;DE22300200300445566778;Mobilfunkvertrag 12/2026;-29.99;Telekommunikation;Gebucht
+2026-12-06;Spotify AB;DE55500105170123411111;Premium-Abo 12/2026;-10.99;Unterhaltung;Gebucht
+2026-12-07;Fitness First GmbH;DE88400500000998877665;Mitgliedsbeitrag 12/2026;-39.90;Sport & Freizeit;Gebucht
+2026-12-08;Netflix International B.V.;DE55500105170123456789;Streaming-Abo 12/2026;-17.99;Unterhaltung;Gebucht
+2026-12-09;Verkehrsbetriebe Musterstadt;DE11200300000123456789;ÖPNV-Monatsticket 12/2026;-58.00;Transport;Gebucht
+2026-12-11;ALDI Süd;DE89370400440532013000;Lebensmitteleinkauf;-82.61;Lebensmittel;Gebucht
+2026-12-13;Bäckerei Müller;DE66700800000112233445;Frühstück und Backwaren;-9.34;Gastronomie;Gebucht
+2026-12-16;dm-drogerie markt;DE44500105170987654321;Drogerie und Haushalt;-36.52;Drogerie & Haushalt;Gebucht
+2026-12-18;REWE Markt GmbH;DE89370400440532013000;Lebensmitteleinkauf;-87.81;Lebensmittel;Gebucht
+2026-12-22;Burgermeister GmbH;DE66700800000112233445;Restaurantbesuch;-51.61;Gastronomie;Gebucht
+2026-12-25;EDEKA Zentrale Stiftung;DE89370400440532013000;Lebensmitteleinkauf;-91.90;Lebensmittel;Gebucht
+2026-12-27;Galeria;DE33500700100876543210;Weihnachtsgeschenke;-218.72;Geschenke;Gebucht

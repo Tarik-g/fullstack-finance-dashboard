@@ -1,12 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   createTransaction,
   deleteTransaction,
+  getAvailableYears,
   getCategories,
+  getCategoryTotals,
+  getFinancialSummary,
+  getTimeline,
   getTransactions,
   updateTransaction,
 } from "./api/financeApi";
+import AnalyticsDashboard from "./components/AnalyticsDashboard";
 import DashboardHeader from "./components/DashboardHeader";
+import DashboardFilters from "./components/DashboardFilters";
 import SummaryCards from "./components/SummaryCards";
 import TransactionModal from "./components/TransactionModal";
 import TransactionsPanel from "./components/TransactionsPanel";
@@ -30,51 +36,146 @@ function createEmptyTransactionForm() {
 }
 
 function App() {
-  const modalScrollPositionRef = useRef(0);
   const [name] = useState("Tarik");
   const [transactions, setTransactions] = useState([]);
+  const [filteredCount, setFilteredCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortField, setSortField] = useState("booking_date");
+  const [sortDirection, setSortDirection] = useState("desc");
+  const [summary, setSummary] = useState({
+    transactionCount: 0,
+    income: 0,
+    expenses: 0,
+    balance: 0,
+  });
+  const [timeline, setTimeline] = useState([]);
+  const [categoryTotals, setCategoryTotals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [transactionForm, setTransactionForm] = useState(
     createEmptyTransactionForm,
   );
   const [transactionMode, setTransactionMode] = useState(null);
+  const [modalScrollPosition, setModalScrollPosition] = useState(0);
   const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [periodMode, setPeriodMode] = useState("all");
+  const [selectedPeriod, setSelectedPeriod] = useState(() =>
+    getLocalDateString().slice(0, 7),
+  );
   const [categories, setCategories] = useState([]);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [dataVersion, setDataVersion] = useState(0);
 
-  function loadTransactions() {
-    return getTransactions()
-      .then((data) => {
-        setTransactions(data);
-        setError(null);
-      })
-      .catch((requestError) => {
-        setError(requestError.message);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 250);
 
-  function loadCategories() {
-    return getCategories()
-      .then(setCategories)
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    let isCurrentRequest = true;
+
+    Promise.all([
+      getFinancialSummary(),
+      getCategories(),
+      getAvailableYears(),
+    ])
+      .then(([summaryData, categoryData, yearData]) => {
+        if (!isCurrentRequest) {
+          return;
+        }
+
+        setSummary(summaryData);
+        setCategories(categoryData);
+        setAvailableYears(yearData);
+      })
       .catch((requestError) => {
         console.error(requestError);
       });
-  }
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [dataVersion]);
 
   useEffect(() => {
-    loadTransactions();
-    loadCategories();
-  }, []);
+    let isCurrentRequest = true;
+    const selectedYear = selectedPeriod.slice(0, 4);
+    const selectedMonth = Number(selectedPeriod.slice(5, 7));
+    const filterParameters = {
+      search: debouncedSearch.trim() || undefined,
+      transaction_type: typeFilter,
+      category: categoryFilter === "all" ? undefined : categoryFilter,
+      year: periodMode === "all" ? undefined : selectedYear,
+      month: periodMode === "month" ? selectedMonth : undefined,
+    };
+
+    Promise.all([
+      getTransactions({
+        ...filterParameters,
+        page: currentPage,
+        page_size: 10,
+        sort_by: sortField,
+        sort_direction: sortDirection,
+      }),
+      getTimeline({
+        ...filterParameters,
+        granularity: periodMode === "month" ? "day" : "month",
+      }),
+      getCategoryTotals(filterParameters),
+    ])
+      .then(([pageData, timelineData, categoryData]) => {
+        if (!isCurrentRequest) {
+          return;
+        }
+
+        setTransactions(pageData.items);
+        setFilteredCount(pageData.total);
+        setTotalPages(pageData.totalPages);
+        setTimeline(timelineData);
+        setCategoryTotals(categoryData);
+        setError(null);
+
+        if (pageData.page !== currentPage) {
+          setCurrentPage(pageData.page);
+        }
+      })
+      .catch((requestError) => {
+        if (isCurrentRequest) {
+          setError(requestError.message);
+        }
+      })
+      .finally(() => {
+        if (isCurrentRequest) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [
+    categoryFilter,
+    currentPage,
+    dataVersion,
+    debouncedSearch,
+    periodMode,
+    selectedPeriod,
+    sortDirection,
+    sortField,
+    typeFilter,
+  ]);
 
   function resetTransactionForm() {
     setTransactionForm(createEmptyTransactionForm());
@@ -84,7 +185,7 @@ function App() {
   }
 
   function handleOpenTransactionForm(mode) {
-    modalScrollPositionRef.current = window.scrollY;
+    setModalScrollPosition(window.scrollY);
     setTransactionForm(createEmptyTransactionForm());
     setTransactionMode(mode);
     setEditingId(null);
@@ -99,7 +200,7 @@ function App() {
   }
 
   function handleEditTransaction(transaction) {
-    modalScrollPositionRef.current = window.scrollY;
+    setModalScrollPosition(window.scrollY);
     setEditingId(transaction.id);
     setTransactionMode("edit");
     setTransactionForm({
@@ -165,7 +266,7 @@ function App() {
       }
 
       resetTransactionForm();
-      await loadTransactions();
+      setDataVersion((currentVersion) => currentVersion + 1);
     } catch (requestError) {
       setFormError(requestError.message);
     } finally {
@@ -184,7 +285,7 @@ function App() {
         resetTransactionForm();
       }
 
-      await loadTransactions();
+      setDataVersion((currentVersion) => currentVersion + 1);
     } catch (requestError) {
       setDeleteError(requestError.message);
     } finally {
@@ -192,39 +293,65 @@ function App() {
     }
   }
 
-  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const selectedYear = selectedPeriod.slice(0, 4);
+  const displayedYears = availableYears.includes(selectedYear)
+    ? availableYears
+    : [...availableYears, selectedYear].sort((first, second) =>
+        second.localeCompare(first),
+      );
+  const hasActiveFilters =
+    searchTerm.trim().length > 0 ||
+    typeFilter !== "all" ||
+    categoryFilter !== "all" ||
+    periodMode !== "all";
 
-  const filteredTransactions = transactions.filter((transaction) => {
-    const matchesSearch = [
-      transaction.counterparty,
-      transaction.purpose,
-      transaction.category,
-      transaction.iban,
-      transaction.status,
-    ].some((value) => value?.toLowerCase().includes(normalizedSearch));
+  function handleResetFilters() {
+    setSearchTerm("");
+    setTypeFilter("all");
+    setCategoryFilter("all");
+    setPeriodMode("all");
+    setCurrentPage(1);
+  }
 
-    const matchesType =
-      typeFilter === "all" ||
-      (typeFilter === "income" && transaction.amount >= 0) ||
-      (typeFilter === "expense" && transaction.amount < 0);
+  function handleSearchChange(value) {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  }
 
-    const matchesCategory =
-      categoryFilter === "all" || transaction.category === categoryFilter;
+  function handleTypeChange(value) {
+    setTypeFilter(value);
+    setCurrentPage(1);
+  }
 
-    return matchesSearch && matchesType && matchesCategory;
-  });
+  function handleCategoryChange(value) {
+    setCategoryFilter(value);
+    setCurrentPage(1);
+  }
 
-  const income = transactions.reduce(
-    (sum, transaction) =>
-      transaction.amount > 0 ? sum + transaction.amount : sum,
-    0,
-  );
-  const expenses = transactions.reduce(
-    (sum, transaction) =>
-      transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum,
-    0,
-  );
-  const balance = income - expenses;
+  function handlePeriodModeChange(value) {
+    setPeriodMode(value);
+    setCurrentPage(1);
+  }
+
+  function handleYearChange(year) {
+    setSelectedPeriod(
+      (currentPeriod) => `${year}-${currentPeriod.slice(5, 7)}`,
+    );
+    setCurrentPage(1);
+  }
+
+  function handleMonthChange(month) {
+    setSelectedPeriod(
+      (currentPeriod) => `${currentPeriod.slice(0, 4)}-${month}`,
+    );
+    setCurrentPage(1);
+  }
+
+  function handleSortChange(field, direction) {
+    setSortField(field);
+    setSortDirection(direction);
+    setCurrentPage(1);
+  }
 
   if (isLoading) {
     return <div className="state-screen">Transaktionen werden geladen ...</div>;
@@ -249,26 +376,53 @@ function App() {
 
       <main className="dashboard-content">
         <SummaryCards
-          balance={balance}
-          income={income}
-          expenses={expenses}
+          balance={summary.balance}
+          income={summary.income}
+          expenses={summary.expenses}
         />
 
-        <TransactionsPanel
-          transactions={filteredTransactions}
-          totalCount={transactions.length}
-          editingId={editingId}
-          deletingId={deletingId}
-          deleteError={deleteError}
-          onEdit={handleEditTransaction}
-          onDelete={handleDeleteTransaction}
+        <DashboardFilters
           searchTerm={searchTerm}
           typeFilter={typeFilter}
           categoryFilter={categoryFilter}
           categories={categories}
-          onSearchChange={setSearchTerm}
-          onTypeChange={setTypeFilter}
-          onCategoryChange={setCategoryFilter}
+          filteredCount={filteredCount}
+          totalCount={summary.transactionCount}
+          hasActiveFilters={hasActiveFilters}
+          periodMode={periodMode}
+          selectedPeriod={selectedPeriod}
+          availableYears={displayedYears}
+          onSearchChange={handleSearchChange}
+          onTypeChange={handleTypeChange}
+          onCategoryChange={handleCategoryChange}
+          onPeriodModeChange={handlePeriodModeChange}
+          onYearChange={handleYearChange}
+          onMonthChange={handleMonthChange}
+          onReset={handleResetFilters}
+        />
+
+        <AnalyticsDashboard
+          timeline={timeline}
+          categories={categoryTotals}
+          periodMode={periodMode}
+        />
+
+        <TransactionsPanel
+          transactions={transactions}
+          filteredCount={filteredCount}
+          totalCount={summary.transactionCount}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={10}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          editingId={editingId}
+          deletingId={deletingId}
+          deleteError={deleteError}
+          onPageChange={setCurrentPage}
+          onSortChange={handleSortChange}
+          onEdit={handleEditTransaction}
+          onDelete={handleDeleteTransaction}
         />
       </main>
 
@@ -277,7 +431,7 @@ function App() {
           transaction={transactionForm}
           categories={categories}
           transactionMode={transactionMode}
-          scrollPosition={modalScrollPositionRef.current}
+          scrollPosition={modalScrollPosition}
           isSubmitting={isSubmitting}
           isEditing={editingId !== null}
           error={formError}

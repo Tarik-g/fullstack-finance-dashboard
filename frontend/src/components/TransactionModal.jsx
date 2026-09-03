@@ -18,12 +18,28 @@ function TransactionModal({
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    const body = document.body;
+    const scrollPosition = initialScrollPositionRef.current;
+    const previousBodyStyles = {
+      overflowY: body.style.overflowY,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+
+    body.style.overflowY = "scroll";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollPosition}px`;
+    body.style.width = "100%";
     dialog.showModal();
-    window.scrollTo({ top: initialScrollPositionRef.current });
 
     return () => {
       dialog.close();
-      window.scrollTo({ top: initialScrollPositionRef.current });
+      body.style.overflowY = previousBodyStyles.overflowY;
+      body.style.position = previousBodyStyles.position;
+      body.style.top = previousBodyStyles.top;
+      body.style.width = previousBodyStyles.width;
+      window.scrollTo(0, scrollPosition);
     };
   }, []);
 

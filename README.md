@@ -36,6 +36,19 @@ npm --prefix frontend run dev
 http://localhost:5173/
 ```
 
+## Demo-Daten neu erstellen
+
+Das Seed-Skript erzeugt reproduzierbare, vollständig synthetische Transaktionen
+für jeden Monat der Jahre 2025 und 2026:
+
+```bash
+python data/seed_database.py --write-csv --apply
+```
+
+`--write-csv` aktualisiert `data/transactions.csv`. `--apply` ersetzt alle
+vorhandenen Zeilen in `public.transactions`. Die Datenbankänderung erfolgt in
+einer Transaktion und wird bei einem Fehler vollständig zurückgerollt.
+
 ## Status
 
 Das Projekt befindet sich in aktiver Entwicklung. Backend und grundlegende API-Endpunkte sind vorhanden. Aktuell arbeite ich an der Fertigstellung des React-Dashboards und der Datenvisualisierung.

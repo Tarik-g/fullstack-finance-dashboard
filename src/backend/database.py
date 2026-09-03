@@ -1,4 +1,6 @@
 import os
+from datetime import date
+
 import psycopg
 
 from dotenv import load_dotenv
@@ -49,12 +51,261 @@ def get_all_transactions(connection):
     """
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM public.transactions;")
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    datum,
+                    empfaenger_sender,
+                    iban,
+                    verwendungszweck,
+                    betrag_euro,
+                    kategorie,
+                    status
+                FROM public.transactions
+                ORDER BY datum DESC, id DESC;
+                """
+            )
             transactions = cursor.fetchall()
             return transactions
     except Exception as e:
         print(f"Error: Could not retrieve transactions. {e}")
         return []
+
+
+def _build_transaction_filters(
+    search=None,
+    transaction_type="all",
+    category=None,
+    year=None,
+    month=None,
+):
+    """Build a reusable, parameterized WHERE clause for dashboard queries."""
+    conditions = []
+    parameters = []
+
+    if search and search.strip():
+        conditions.append(
+            sql.SQL(
+                """
+                CONCAT_WS(
+                    ' ',
+                    empfaenger_sender,
+                    iban,
+                    verwendungszweck,
+                    kategorie,
+                    status
+                ) ILIKE %s
+                """
+            )
+        )
+        parameters.append(f"%{search.strip()}%")
+
+    if transaction_type == "income":
+        conditions.append(sql.SQL("betrag_euro >= 0"))
+    elif transaction_type == "expense":
+        conditions.append(sql.SQL("betrag_euro < 0"))
+
+    if category:
+        conditions.append(sql.SQL("kategorie = %s"))
+        parameters.append(category)
+
+    if year is not None:
+        period_start = date(year, month or 1, 1)
+
+        if month is None:
+            period_end = date(year + 1, 1, 1)
+        elif month == 12:
+            period_end = date(year + 1, 1, 1)
+        else:
+            period_end = date(year, month + 1, 1)
+
+        conditions.extend(
+            [sql.SQL("datum >= %s"), sql.SQL("datum < %s")]
+        )
+        parameters.extend([period_start, period_end])
+
+    if not conditions:
+        return sql.SQL(" WHERE TRUE"), parameters
+
+    return sql.SQL(" WHERE ") + sql.SQL(" AND ").join(conditions), parameters
+
+
+def get_paginated_transactions(
+    connection,
+    page=1,
+    page_size=10,
+    search=None,
+    transaction_type="all",
+    category=None,
+    year=None,
+    month=None,
+    sort_by="booking_date",
+    sort_direction="desc",
+):
+    """Return one filtered and sorted transaction page plus its metadata."""
+    where_clause, parameters = _build_transaction_filters(
+        search=search,
+        transaction_type=transaction_type,
+        category=category,
+        year=year,
+        month=month,
+    )
+    sort_columns = {
+        "booking_date": sql.Identifier("datum"),
+        "amount": sql.Identifier("betrag_euro"),
+    }
+    sort_column = sort_columns[sort_by]
+    sort_order = sql.SQL("ASC" if sort_direction == "asc" else "DESC")
+
+    with connection.cursor() as cursor:
+        count_query = sql.SQL(
+            "SELECT COUNT(*) FROM public.transactions{where_clause};"
+        ).format(where_clause=where_clause)
+        cursor.execute(count_query, parameters)
+        total = cursor.fetchone()[0]
+
+        total_pages = max(1, (total + page_size - 1) // page_size)
+        effective_page = min(page, total_pages)
+        offset = (effective_page - 1) * page_size
+
+        select_query = sql.SQL(
+            """
+            SELECT
+                id,
+                datum,
+                empfaenger_sender,
+                iban,
+                verwendungszweck,
+                betrag_euro,
+                kategorie,
+                status
+            FROM public.transactions
+            {where_clause}
+            ORDER BY {sort_column} {sort_order}, id DESC
+            LIMIT %s OFFSET %s;
+            """
+        ).format(
+            where_clause=where_clause,
+            sort_column=sort_column,
+            sort_order=sort_order,
+        )
+        cursor.execute(select_query, [*parameters, page_size, offset])
+        items = cursor.fetchall()
+
+    return {
+        "items": items,
+        "total": total,
+        "page": effective_page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    }
+
+
+def get_transaction_summary(connection):
+    """Return overall totals used by the dashboard summary cards."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(betrag_euro) FILTER (WHERE betrag_euro > 0), 0),
+                ABS(COALESCE(SUM(betrag_euro) FILTER (WHERE betrag_euro < 0), 0))
+            FROM public.transactions;
+            """
+        )
+        transaction_count, income, expenses = cursor.fetchone()
+
+    return {
+        "transaction_count": transaction_count,
+        "income": income,
+        "expenses": expenses,
+        "balance": income - expenses,
+    }
+
+
+def get_transaction_timeline(
+    connection,
+    granularity="month",
+    search=None,
+    transaction_type="all",
+    category=None,
+    year=None,
+    month=None,
+):
+    """Aggregate filtered income and expenses by month or day."""
+    where_clause, parameters = _build_transaction_filters(
+        search=search,
+        transaction_type=transaction_type,
+        category=category,
+        year=year,
+        month=month,
+    )
+    trunc_unit = sql.Literal("day" if granularity == "day" else "month")
+    query = sql.SQL(
+        """
+        SELECT
+            DATE_TRUNC({trunc_unit}, datum)::date AS period,
+            COALESCE(SUM(betrag_euro) FILTER (WHERE betrag_euro >= 0), 0) AS income,
+            ABS(COALESCE(SUM(betrag_euro) FILTER (WHERE betrag_euro < 0), 0)) AS expenses
+        FROM public.transactions
+        {where_clause}
+        GROUP BY period
+        ORDER BY period;
+        """
+    ).format(trunc_unit=trunc_unit, where_clause=where_clause)
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, parameters)
+        return cursor.fetchall()
+
+
+def get_expenses_by_category(
+    connection,
+    search=None,
+    transaction_type="all",
+    category=None,
+    year=None,
+    month=None,
+):
+    """Aggregate filtered expenses by category."""
+    where_clause, parameters = _build_transaction_filters(
+        search=search,
+        transaction_type=transaction_type,
+        category=category,
+        year=year,
+        month=month,
+    )
+    where_clause += sql.SQL(" AND betrag_euro < 0")
+
+    query = sql.SQL(
+        """
+        SELECT
+            COALESCE(NULLIF(TRIM(kategorie), ''), 'Ohne Kategorie') AS category,
+            ABS(SUM(betrag_euro)) AS amount
+        FROM public.transactions
+        {where_clause}
+        GROUP BY category
+        ORDER BY amount DESC, category;
+        """
+    ).format(where_clause=where_clause)
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, parameters)
+        return cursor.fetchall()
+
+
+def get_available_years(connection):
+    """Return all years represented in the transaction table."""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT DISTINCT EXTRACT(YEAR FROM datum)::integer AS year
+            FROM public.transactions
+            ORDER BY year DESC;
+            """
+        )
+        return [row[0] for row in cursor.fetchall()]
 
 
 def get_transaction_by_id(connection, transaction_id):

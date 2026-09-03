@@ -27,14 +27,8 @@ function toApiTransaction(transaction) {
   };
 }
 
-export async function getTransactions() {
-  const data = await request(
-    "/transactions",
-    undefined,
-    "Transaktionen konnten nicht geladen werden",
-  );
-
-  return data.map((transaction) => ({
+function toFrontendTransaction(transaction) {
+  return {
     id: transaction.id,
     bookingDate: transaction.datum,
     counterparty: transaction.empfaenger_sender,
@@ -43,15 +37,95 @@ export async function getTransactions() {
     amount: Number(transaction.betrag_euro),
     category: transaction.kategorie,
     status: transaction.status,
-  }));
+  };
+}
+
+function buildQuery(parameters) {
+  const query = new URLSearchParams();
+
+  Object.entries(parameters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, value);
+    }
+  });
+
+  return query.toString();
+}
+
+export async function getTransactions(parameters) {
+  const data = await request(
+    `/api/v1/transactions?${buildQuery(parameters)}`,
+    undefined,
+    "Transaktionen konnten nicht geladen werden",
+  );
+
+  return {
+    items: data.items.map(toFrontendTransaction),
+    total: data.total,
+    page: data.page,
+    pageSize: data.page_size,
+    totalPages: data.total_pages,
+  };
 }
 
 export function getCategories() {
   return request(
-    "/categories",
+    "/api/v1/categories",
     undefined,
     "Kategorien konnten nicht geladen werden",
   );
+}
+
+export async function getAvailableYears() {
+  const years = await request(
+    "/api/v1/years",
+    undefined,
+    "Verfügbare Jahre konnten nicht geladen werden",
+  );
+
+  return years.map(String);
+}
+
+export async function getFinancialSummary() {
+  const data = await request(
+    "/api/v1/analytics/summary",
+    undefined,
+    "Kennzahlen konnten nicht geladen werden",
+  );
+
+  return {
+    transactionCount: data.transaction_count,
+    income: Number(data.income),
+    expenses: Number(data.expenses),
+    balance: Number(data.balance),
+  };
+}
+
+export async function getTimeline(parameters) {
+  const data = await request(
+    `/api/v1/analytics/timeline?${buildQuery(parameters)}`,
+    undefined,
+    "Zeitverlauf konnte nicht geladen werden",
+  );
+
+  return data.map((point) => ({
+    period: point.period,
+    income: Number(point.income),
+    expenses: Number(point.expenses),
+  }));
+}
+
+export async function getCategoryTotals(parameters) {
+  const data = await request(
+    `/api/v1/analytics/categories?${buildQuery(parameters)}`,
+    undefined,
+    "Kategorieauswertung konnte nicht geladen werden",
+  );
+
+  return data.map((category) => ({
+    name: category.category,
+    amount: Number(category.amount),
+  }));
 }
 
 export function createTransaction(transaction) {
