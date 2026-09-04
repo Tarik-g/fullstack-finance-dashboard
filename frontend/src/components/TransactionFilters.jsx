@@ -13,6 +13,7 @@ function TransactionFilters({
         Transaktionen durchsuchen
         <input
           type="search"
+          maxLength={100}
           value={searchTerm}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Name, Kategorie, Zweck ..."

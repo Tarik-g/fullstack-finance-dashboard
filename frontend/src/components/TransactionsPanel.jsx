@@ -1,70 +1,39 @@
-import { useMemo, useState } from "react";
 import TransactionRow from "./TransactionRow";
-
-const PAGE_SIZE = 10;
 
 function TransactionsPanel({
   transactions,
+  filteredCount,
   totalCount,
-  filterKey,
+  currentPage,
+  totalPages,
+  pageSize,
+  sortField,
+  sortDirection,
+  isLoading,
+  loadError,
   editingId,
   deletingId,
   deleteError,
+  onPageChange,
+  onSortChange,
   onEdit,
   onDelete,
 }) {
-  const [sortField, setSortField] = useState("bookingDate");
-  const [sortDirection, setSortDirection] = useState("desc");
-  const [pageState, setPageState] = useState({ page: 1, filterKey });
-
-  const sortedTransactions = useMemo(() => {
-    return [...transactions].sort((first, second) => {
-      const comparison =
-        sortField === "amount"
-          ? first.amount - second.amount
-          : first.bookingDate.localeCompare(second.bookingDate);
-
-      if (comparison !== 0) {
-        return sortDirection === "asc" ? comparison : -comparison;
-      }
-
-      return second.id - first.id;
-    });
-  }, [sortDirection, sortField, transactions]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(sortedTransactions.length / PAGE_SIZE),
-  );
-  const requestedPage = pageState.filterKey === filterKey ? pageState.page : 1;
-  const activePage = Math.min(requestedPage, totalPages);
-  const firstItemIndex = (activePage - 1) * PAGE_SIZE;
-  const visibleTransactions = sortedTransactions.slice(
-    firstItemIndex,
-    firstItemIndex + PAGE_SIZE,
-  );
+  const firstItemIndex = (currentPage - 1) * pageSize;
+  const visibleTransactions = transactions;
   const firstVisibleNumber =
     visibleTransactions.length === 0 ? 0 : firstItemIndex + 1;
   const lastVisibleNumber = firstItemIndex + visibleTransactions.length;
 
   function handleSort(field) {
-    if (sortField === field) {
-      setSortDirection((currentDirection) =>
-        currentDirection === "asc" ? "desc" : "asc",
-      );
-    } else {
-      setSortField(field);
-      setSortDirection("desc");
-    }
-
-    setPageState({ page: 1, filterKey });
+    const direction =
+      sortField === field && sortDirection === "desc" ? "asc" : "desc";
+    onSortChange(field, direction);
   }
 
   function handleMobileSort(event) {
     const [field, direction] = event.target.value.split(":");
-    setSortField(field);
-    setSortDirection(direction);
-    setPageState({ page: 1, filterKey });
+    onSortChange(field, direction);
   }
 
   function getSortLabel(field) {
@@ -84,14 +53,16 @@ function TransactionsPanel({
   }
 
   return (
-    <section className="panel transactions-panel">
+    <section className="panel transactions-panel" aria-busy={isLoading}>
       <div className="section-heading table-heading">
         <div>
           <p className="eyebrow">Aktivität</p>
           <h2>Letzte Transaktionen</h2>
         </div>
         <span className="transaction-count">
-          {transactions.length} von {totalCount} Buchungen
+          {isLoading
+            ? "Lade Buchungen …"
+            : `${filteredCount} von ${totalCount} Buchungen`}
         </span>
       </div>
 
@@ -108,8 +79,8 @@ function TransactionsPanel({
             value={`${sortField}:${sortDirection}`}
             onChange={handleMobileSort}
           >
-            <option value="bookingDate:desc">Neueste zuerst</option>
-            <option value="bookingDate:asc">Älteste zuerst</option>
+            <option value="booking_date:desc">Neueste zuerst</option>
+            <option value="booking_date:asc">Älteste zuerst</option>
             <option value="amount:desc">Höchster Betrag</option>
             <option value="amount:asc">Niedrigster Betrag</option>
           </select>
@@ -120,14 +91,14 @@ function TransactionsPanel({
         <table>
           <thead>
             <tr>
-              <th aria-sort={getAriaSort("bookingDate")}>
+              <th aria-sort={getAriaSort("booking_date")}>
                 <button
                   className="sort-button"
                   type="button"
-                  onClick={() => handleSort("bookingDate")}
+                  onClick={() => handleSort("booking_date")}
                 >
                   Datum
-                  <span aria-hidden="true">{getSortLabel("bookingDate")}</span>
+                  <span aria-hidden="true">{getSortLabel("booking_date")}</span>
                 </button>
               </th>
               <th>Empfänger / Sender</th>
@@ -148,7 +119,19 @@ function TransactionsPanel({
             </tr>
           </thead>
           <tbody>
-            {visibleTransactions.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td className="empty-table" colSpan="7" data-label="Status">
+                  Transaktionen werden geladen …
+                </td>
+              </tr>
+            ) : loadError ? (
+              <tr>
+                <td className="empty-table" colSpan="7" data-label="Fehler">
+                  Die Transaktionen konnten nicht geladen werden.
+                </td>
+              </tr>
+            ) : visibleTransactions.length === 0 ? (
               <tr>
                 <td className="empty-table" colSpan="7" data-label="Ergebnis">
                   Keine passenden Transaktionen gefunden.
@@ -170,27 +153,27 @@ function TransactionsPanel({
         </table>
       </div>
 
-      {visibleTransactions.length > 0 && (
+      {!isLoading && visibleTransactions.length > 0 && (
         <nav className="pagination" aria-label="Seitennavigation">
           <span>
-            {firstVisibleNumber}–{lastVisibleNumber} von {transactions.length}
+            {firstVisibleNumber}–{lastVisibleNumber} von {filteredCount}
           </span>
 
           <div className="pagination-actions">
             <button
               type="button"
-              onClick={() => setPageState({ page: activePage - 1, filterKey })}
-              disabled={activePage === 1}
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
             >
               Zurück
             </button>
             <strong>
-              Seite {activePage} von {totalPages}
+              Seite {currentPage} von {totalPages}
             </strong>
             <button
               type="button"
-              onClick={() => setPageState({ page: activePage + 1, filterKey })}
-              disabled={activePage === totalPages}
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
             >
               Weiter
             </button>

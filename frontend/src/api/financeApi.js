@@ -40,7 +40,7 @@ function toFrontendTransaction(transaction) {
   };
 }
 
-function buildQuery(parameters) {
+function buildQuery(parameters = {}) {
   const query = new URLSearchParams();
 
   Object.entries(parameters).forEach(([key, value]) => {
@@ -52,10 +52,10 @@ function buildQuery(parameters) {
   return query.toString();
 }
 
-export async function getTransactions(parameters) {
+export async function getTransactions(parameters, options) {
   const data = await request(
     `/api/v1/transactions?${buildQuery(parameters)}`,
-    undefined,
+    options,
     "Transaktionen konnten nicht geladen werden",
   );
 
@@ -68,28 +68,28 @@ export async function getTransactions(parameters) {
   };
 }
 
-export function getCategories() {
+export function getCategories(options) {
   return request(
     "/api/v1/categories",
-    undefined,
+    options,
     "Kategorien konnten nicht geladen werden",
   );
 }
 
-export async function getAvailableYears() {
+export async function getAvailableYears(options) {
   const years = await request(
     "/api/v1/years",
-    undefined,
+    options,
     "Verfügbare Jahre konnten nicht geladen werden",
   );
 
   return years.map(String);
 }
 
-export async function getFinancialSummary() {
+export async function getFinancialSummary(options) {
   const data = await request(
     "/api/v1/analytics/summary",
-    undefined,
+    options,
     "Kennzahlen konnten nicht geladen werden",
   );
 
@@ -101,10 +101,10 @@ export async function getFinancialSummary() {
   };
 }
 
-export async function getTimeline(parameters) {
+export async function getTimeline(parameters, options) {
   const data = await request(
     `/api/v1/analytics/timeline?${buildQuery(parameters)}`,
-    undefined,
+    options,
     "Zeitverlauf konnte nicht geladen werden",
   );
 
@@ -115,10 +115,10 @@ export async function getTimeline(parameters) {
   }));
 }
 
-export async function getCategoryTotals(parameters) {
+export async function getCategoryTotals(parameters, options) {
   const data = await request(
     `/api/v1/analytics/categories?${buildQuery(parameters)}`,
-    undefined,
+    options,
     "Kategorieauswertung konnte nicht geladen werden",
   );
 

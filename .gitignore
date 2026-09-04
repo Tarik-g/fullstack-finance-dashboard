@@ -19,6 +19,8 @@ dist/
 *.local
 
 # Test output
+.vitest/
+.e2e-dist/
 coverage/
 playwright-report/
 test-results/

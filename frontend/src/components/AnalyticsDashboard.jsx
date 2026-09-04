@@ -11,10 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  collapseCategoryData,
-  formatTimelineData,
-} from "../utils/analytics";
+import { collapseCategoryData, formatTimelineData } from "../utils/analytics";
 import { formatCompactCurrency, formatCurrency } from "../utils/formatters";
 
 const CATEGORY_COLORS = [
@@ -34,7 +31,7 @@ const tooltipStyle = {
   color: "#e8edf7",
 };
 
-function AnalyticsDashboard({ timeline, categories, periodMode }) {
+function AnalyticsDashboard({ timeline, categories, periodMode, isLoading }) {
   const isDailyView = periodMode === "month";
   const timelineData = useMemo(
     () => formatTimelineData(timeline, isDailyView ? "day" : "month"),
@@ -50,7 +47,11 @@ function AnalyticsDashboard({ timeline, categories, periodMode }) {
   );
 
   return (
-    <section className="analytics-grid" aria-label="Finanzanalysen">
+    <section
+      className="analytics-grid"
+      aria-label="Finanzanalysen"
+      aria-busy={isLoading}
+    >
       <article className="panel chart-panel monthly-chart-panel">
         <div className="section-heading chart-heading">
           <div>
@@ -71,7 +72,11 @@ function AnalyticsDashboard({ timeline, categories, periodMode }) {
           </div>
         </div>
 
-        {timelineData.length === 0 ? (
+        {isLoading ? (
+          <p className="chart-empty" role="status">
+            Auswertung wird geladen …
+          </p>
+        ) : timelineData.length === 0 ? (
           <p className="chart-empty">Keine Daten für diese Auswahl.</p>
         ) : (
           <div
@@ -145,7 +150,11 @@ function AnalyticsDashboard({ timeline, categories, periodMode }) {
           </div>
         </div>
 
-        {categoryData.length === 0 ? (
+        {isLoading ? (
+          <p className="chart-empty" role="status">
+            Auswertung wird geladen …
+          </p>
+        ) : categoryData.length === 0 ? (
           <p className="chart-empty">Keine Ausgaben für diese Auswahl.</p>
         ) : (
           <>

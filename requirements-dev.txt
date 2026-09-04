@@ -1,0 +1,3 @@
+-r requirements.txt
+# Starlette's TestClient uses HTTPX2 (HTTPX compatibility is deprecated).
+httpx2==2.12.0

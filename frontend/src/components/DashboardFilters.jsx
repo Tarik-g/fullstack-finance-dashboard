@@ -7,6 +7,7 @@ function DashboardFilters({
   categories,
   filteredCount,
   totalCount,
+  isLoading,
   hasActiveFilters,
   periodMode,
   selectedPeriod,
@@ -32,7 +33,9 @@ function DashboardFilters({
 
         <div className="filter-summary">
           <span className="transaction-count">
-            {filteredCount} von {totalCount} Buchungen
+            {isLoading
+              ? "Ergebnisse werden geladen …"
+              : `${filteredCount} von ${totalCount} Buchungen`}
           </span>
           <button
             className="filter-reset"

@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi import HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,7 +9,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+        if origin.strip()
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -413,8 +419,10 @@ async def create_transaction(transaction_data: TransactionCreate):
         transaction_data.status
     )
     
-    success = insert_transaction(connection, transaction_tuple)
-    connection.close()
+    try:
+        success = insert_transaction(connection, transaction_tuple)
+    finally:
+        connection.close()
     
     if success:
         raise HTTPException(status_code=status.HTTP_201_CREATED, detail={"message": "Transaction inserted successfully."})
@@ -510,8 +518,10 @@ async def delete_transaction(transaction_id: int):
     if connection is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"error": "Could not connect to the database."})
     
-    success = delete_transaction_by_id(connection, transaction_id)
-    connection.close()
+    try:
+        success = delete_transaction_by_id(connection, transaction_id)
+    finally:
+        connection.close()
     
     if success:
         raise HTTPException(status_code=status.HTTP_200_OK, detail={"message": f"Transaction with ID {transaction_id} deleted successfully."})

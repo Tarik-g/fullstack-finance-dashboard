@@ -99,7 +99,11 @@ def _build_transaction_filters(
                 """
             )
         )
-        parameters.append(f"%{search.strip()}%")
+        # Treat user input as literal text, not as SQL LIKE wildcards.
+        literal_search = (
+            search.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        )
+        parameters.append(f"%{literal_search}%")
 
     if transaction_type == "income":
         conditions.append(sql.SQL("betrag_euro >= 0"))
@@ -449,9 +453,11 @@ def insert_transaction(connection, transaction_data):
                 ON CONFLICT DO NOTHING;
             """
             cursor.execute(insert_query, transaction_data)
+            was_inserted = cursor.rowcount > 0
             connection.commit()
-            print("Transaction inserted successfully.")
-            return True
+            if was_inserted:
+                print("Transaction inserted successfully.")
+            return was_inserted
     except Exception as e:
         print(f"Error: Could not insert transaction. {e}")
         connection.rollback()

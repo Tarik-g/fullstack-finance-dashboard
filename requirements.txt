@@ -1,0 +1,6 @@
+# Runtime dependencies, matching the tested development environment.
+fastapi==0.141.1
+pandas==3.0.5
+psycopg[binary]==3.3.5
+python-dotenv==1.2.3
+uvicorn[standard]==0.52.4

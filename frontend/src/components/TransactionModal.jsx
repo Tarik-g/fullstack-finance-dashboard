@@ -18,6 +18,7 @@ function TransactionModal({
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    const previousActiveElement = document.activeElement;
     const body = document.body;
     const scrollPosition = initialScrollPositionRef.current;
     const previousBodyStyles = {
@@ -39,6 +40,14 @@ function TransactionModal({
       body.style.position = previousBodyStyles.position;
       body.style.top = previousBodyStyles.top;
       body.style.width = previousBodyStyles.width;
+      // React may remove the dialog before effect cleanup, so native close()
+      // alone cannot reliably restore focus to its opening button.
+      if (
+        previousActiveElement instanceof HTMLElement &&
+        previousActiveElement.isConnected
+      ) {
+        previousActiveElement.focus({ preventScroll: true });
+      }
       window.scrollTo(0, scrollPosition);
     };
   }, []);

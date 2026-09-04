@@ -2,12 +2,6 @@ import { useEffect, useState } from "react";
 import {
   createTransaction,
   deleteTransaction,
-  getAvailableYears,
-  getCategories,
-  getCategoryTotals,
-  getFinancialSummary,
-  getTimeline,
-  getTransactions,
   updateTransaction,
 } from "./api/financeApi";
 import AnalyticsDashboard from "./components/AnalyticsDashboard";
@@ -16,6 +10,7 @@ import DashboardFilters from "./components/DashboardFilters";
 import SummaryCards from "./components/SummaryCards";
 import TransactionModal from "./components/TransactionModal";
 import TransactionsPanel from "./components/TransactionsPanel";
+import useDashboardData from "./hooks/useDashboardData";
 
 function getLocalDateString() {
   const now = new Date();
@@ -37,22 +32,9 @@ function createEmptyTransactionForm() {
 
 function App() {
   const [name] = useState("Tarik");
-  const [transactions, setTransactions] = useState([]);
-  const [filteredCount, setFilteredCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [sortField, setSortField] = useState("booking_date");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [summary, setSummary] = useState({
-    transactionCount: 0,
-    income: 0,
-    expenses: 0,
-    balance: 0,
-  });
-  const [timeline, setTimeline] = useState([]);
-  const [categoryTotals, setCategoryTotals] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [transactionForm, setTransactionForm] = useState(
     createEmptyTransactionForm,
   );
@@ -71,111 +53,53 @@ function App() {
   const [selectedPeriod, setSelectedPeriod] = useState(() =>
     getLocalDateString().slice(0, 7),
   );
-  const [categories, setCategories] = useState([]);
-  const [availableYears, setAvailableYears] = useState([]);
   const [dataVersion, setDataVersion] = useState(0);
 
   useEffect(() => {
+    if (searchTerm === debouncedSearch) return;
+
     const timeoutId = window.setTimeout(() => {
       setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
     }, 250);
 
     return () => window.clearTimeout(timeoutId);
-  }, [searchTerm]);
+  }, [searchTerm, debouncedSearch]);
 
-  useEffect(() => {
-    let isCurrentRequest = true;
-
-    Promise.all([
-      getFinancialSummary(),
-      getCategories(),
-      getAvailableYears(),
-    ])
-      .then(([summaryData, categoryData, yearData]) => {
-        if (!isCurrentRequest) {
-          return;
-        }
-
-        setSummary(summaryData);
-        setCategories(categoryData);
-        setAvailableYears(yearData);
-      })
-      .catch((requestError) => {
-        console.error(requestError);
-      });
-
-    return () => {
-      isCurrentRequest = false;
-    };
-  }, [dataVersion]);
-
-  useEffect(() => {
-    let isCurrentRequest = true;
-    const selectedYear = selectedPeriod.slice(0, 4);
-    const selectedMonth = Number(selectedPeriod.slice(5, 7));
-    const filterParameters = {
+  const {
+    metadata,
+    transactions: pageRequest,
+    analytics: analyticsRequest,
+  } = useDashboardData({
+    filters: {
       search: debouncedSearch.trim() || undefined,
       transaction_type: typeFilter,
       category: categoryFilter === "all" ? undefined : categoryFilter,
-      year: periodMode === "all" ? undefined : selectedYear,
-      month: periodMode === "month" ? selectedMonth : undefined,
-    };
-
-    Promise.all([
-      getTransactions({
-        ...filterParameters,
-        page: currentPage,
-        page_size: 10,
-        sort_by: sortField,
-        sort_direction: sortDirection,
-      }),
-      getTimeline({
-        ...filterParameters,
-        granularity: periodMode === "month" ? "day" : "month",
-      }),
-      getCategoryTotals(filterParameters),
-    ])
-      .then(([pageData, timelineData, categoryData]) => {
-        if (!isCurrentRequest) {
-          return;
-        }
-
-        setTransactions(pageData.items);
-        setFilteredCount(pageData.total);
-        setTotalPages(pageData.totalPages);
-        setTimeline(timelineData);
-        setCategoryTotals(categoryData);
-        setError(null);
-
-        if (pageData.page !== currentPage) {
-          setCurrentPage(pageData.page);
-        }
-      })
-      .catch((requestError) => {
-        if (isCurrentRequest) {
-          setError(requestError.message);
-        }
-      })
-      .finally(() => {
-        if (isCurrentRequest) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isCurrentRequest = false;
-    };
-  }, [
-    categoryFilter,
-    currentPage,
-    dataVersion,
-    debouncedSearch,
-    periodMode,
-    selectedPeriod,
-    sortDirection,
+      year: periodMode === "all" ? undefined : selectedPeriod.slice(0, 4),
+      month:
+        periodMode === "month" ? Number(selectedPeriod.slice(5, 7)) : undefined,
+    },
+    page: currentPage,
     sortField,
-    typeFilter,
-  ]);
+    sortDirection,
+    granularity: periodMode === "month" ? "day" : "month",
+    version: dataVersion,
+  });
+
+  const summary = metadata.data?.summary;
+  const categories = metadata.data?.categories ?? [];
+  const availableYears = metadata.data?.years ?? [];
+  const pageData = pageRequest.data;
+  const transactions = pageData?.items ?? [];
+  const filteredCount = pageData?.total ?? 0;
+  const isSearchPending = searchTerm !== debouncedSearch;
+  const isPageLoading = pageRequest.isLoading || isSearchPending;
+  const isAnalyticsLoading = analyticsRequest.isLoading || isSearchPending;
+  const errors = [
+    metadata.error,
+    pageRequest.error,
+    analyticsRequest.error,
+  ].filter(Boolean);
 
   function resetTransactionForm() {
     setTransactionForm(createEmptyTransactionForm());
@@ -307,6 +231,7 @@ function App() {
 
   function handleResetFilters() {
     setSearchTerm("");
+    setDebouncedSearch("");
     setTypeFilter("all");
     setCategoryFilter("all");
     setPeriodMode("all");
@@ -315,7 +240,6 @@ function App() {
 
   function handleSearchChange(value) {
     setSearchTerm(value);
-    setCurrentPage(1);
   }
 
   function handleTypeChange(value) {
@@ -353,17 +277,8 @@ function App() {
     setCurrentPage(1);
   }
 
-  if (isLoading) {
+  if (!metadata.data && metadata.isLoading) {
     return <div className="state-screen">Transaktionen werden geladen ...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="state-screen state-error">
-        <strong>Die Daten konnten nicht geladen werden.</strong>
-        <span>{error}</span>
-      </div>
-    );
   }
 
   return (
@@ -375,11 +290,31 @@ function App() {
       />
 
       <main className="dashboard-content">
-        <SummaryCards
-          balance={summary.balance}
-          income={summary.income}
-          expenses={summary.expenses}
-        />
+        {errors.length > 0 && (
+          <div className="panel" role="alert">
+            <p>{[...new Set(errors)].join(" · ")}</p>
+            <button
+              type="button"
+              onClick={() => setDataVersion((version) => version + 1)}
+            >
+              Erneut laden
+            </button>
+          </div>
+        )}
+
+        {metadata.isLoading ? (
+          <p className="panel" role="status">
+            Kennzahlen werden aktualisiert …
+          </p>
+        ) : summary ? (
+          <SummaryCards
+            balance={summary.balance}
+            income={summary.income}
+            expenses={summary.expenses}
+          />
+        ) : (
+          <p className="panel">Kennzahlen derzeit nicht verfügbar.</p>
+        )}
 
         <DashboardFilters
           searchTerm={searchTerm}
@@ -387,7 +322,8 @@ function App() {
           categoryFilter={categoryFilter}
           categories={categories}
           filteredCount={filteredCount}
-          totalCount={summary.transactionCount}
+          totalCount={summary?.transactionCount ?? 0}
+          isLoading={isPageLoading}
           hasActiveFilters={hasActiveFilters}
           periodMode={periodMode}
           selectedPeriod={selectedPeriod}
@@ -401,19 +337,26 @@ function App() {
           onReset={handleResetFilters}
         />
 
-        <AnalyticsDashboard
-          timeline={timeline}
-          categories={categoryTotals}
-          periodMode={periodMode}
-        />
+        {analyticsRequest.error ? (
+          <p className="panel">Diagramme konnten nicht geladen werden.</p>
+        ) : (
+          <AnalyticsDashboard
+            timeline={analyticsRequest.data?.timeline ?? []}
+            categories={analyticsRequest.data?.categories ?? []}
+            periodMode={periodMode}
+            isLoading={isAnalyticsLoading}
+          />
+        )}
 
         <TransactionsPanel
           transactions={transactions}
           filteredCount={filteredCount}
-          totalCount={summary.transactionCount}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={10}
+          totalCount={summary?.transactionCount ?? 0}
+          currentPage={pageData?.page ?? currentPage}
+          totalPages={pageData?.totalPages ?? 1}
+          pageSize={pageData?.pageSize ?? 10}
+          isLoading={isPageLoading}
+          loadError={pageRequest.error}
           sortField={sortField}
           sortDirection={sortDirection}
           editingId={editingId}
