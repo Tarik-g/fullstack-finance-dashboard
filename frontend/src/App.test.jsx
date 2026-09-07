@@ -42,7 +42,7 @@ beforeEach(() => {
 
 async function openDashboard() {
   render(<App />);
-  await screen.findByText(expense.empfaenger_sender);
+  await screen.findByText(expense.counterparty);
   await waitFor(() =>
     expect(screen.getByTestId("analytics")).toHaveAttribute(
       "aria-busy",
@@ -69,12 +69,10 @@ describe("dashboard loading and filters", () => {
     api.respondWith(summaryPath, () => pending.promise);
     render(<App />);
     expect(
-      screen.getByText("Transaktionen werden geladen ..."),
+      screen.getByText("Transaktionen werden geladen …"),
     ).toBeInTheDocument();
     await act(async () => pending.resolve(jsonResponse(summary)));
-    expect(
-      await screen.findByText(expense.empfaenger_sender),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(expense.counterparty)).toBeInTheDocument();
     expect(screen.getByText("2.954,18 €")).toBeInTheDocument();
   });
 
@@ -85,7 +83,7 @@ describe("dashboard loading and filters", () => {
     const query = api.callsFor(transactionsPath)[0].url.searchParams;
     expect(query.get("page_size")).toBe("10");
     expect(query.get("sort_by")).toBe("booking_date");
-    expect(api.callsFor("/transactions")).toHaveLength(0);
+    expect(api.callsFor("/api/v1/transactions")).toHaveLength(1);
   });
 
   it("debounces search and applies it to the table and both analytics requests", async () => {
@@ -100,9 +98,7 @@ describe("dashboard loading and filters", () => {
         "REWE",
       );
     }
-    expect(
-      await screen.findByText(expense.empfaenger_sender),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(expense.counterparty)).toBeInTheDocument();
     expect(api.callsFor(summaryPath)).toHaveLength(1);
     expect(screen.getByText("2.954,18 €")).toBeInTheDocument();
   });
@@ -205,19 +201,52 @@ describe("dashboard loading and filters", () => {
     api.respondWith(transactionsPath, () => jsonResponse({}, 503));
     render(<App />);
     expect(await screen.findByRole("alert")).toHaveTextContent("HTTP 503");
-    expect(
-      screen.queryByText(expense.empfaenger_sender),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(expense.counterparty)).not.toBeInTheDocument();
     api.respondWith(transactionsPath, () => jsonResponse(page()));
     await user.click(screen.getByRole("button", { name: "Erneut laden" }));
-    expect(
-      await screen.findByText(expense.empfaenger_sender),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(expense.counterparty)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
 
 describe("transaction forms and mutations", () => {
+  it("imports a CSV file, shows the report and refreshes dashboard data", async () => {
+    api.respondWith(
+      "/api/v1/imports/csv",
+      () =>
+        jsonResponse({
+          total_rows: 3,
+          inserted: 1,
+          skipped: 1,
+          failed: 1,
+          errors: ["Row 4: amount is invalid"],
+        }),
+      "POST",
+    );
+    await openDashboard();
+    await user.click(screen.getByRole("button", { name: "CSV importieren" }));
+    const dialog = screen.getByRole("dialog", { name: "CSV importieren" });
+    const file = new File(
+      ["booking_date,counterparty,amount\n2026-09-02,Demo,-12.50"],
+      "transactions.csv",
+      { type: "text/csv" },
+    );
+    await user.upload(within(dialog).getByLabelText("CSV-Datei"), file);
+    await user.click(
+      within(dialog).getByRole("button", { name: "Datei importieren" }),
+    );
+
+    expect(
+      await within(dialog).findByText("Import abgeschlossen"),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText("Duplikate")).toBeInTheDocument();
+    expect(api.callsFor("/api/v1/imports/csv", "POST")).toHaveLength(1);
+    expect(
+      api.callsFor("/api/v1/imports/csv", "POST")[0].options.body,
+    ).toBeInstanceOf(FormData);
+    await waitFor(() => expect(api.callsFor(summaryPath)).toHaveLength(2));
+  });
+
   it("rejects a whitespace-only name without sending a POST", async () => {
     await openDashboard();
     const dialog = await fillExpense("   ");
@@ -227,7 +256,7 @@ describe("transaction forms and mutations", () => {
     expect(within(dialog).getByRole("alert")).toHaveTextContent(
       "Bitte gib einen Namen ein.",
     );
-    expect(api.callsFor("/transactions", "POST")).toHaveLength(0);
+    expect(api.callsFor("/api/v1/transactions", "POST")).toHaveLength(0);
   });
 
   it("rejects a non-numeric amount without sending a POST", async () => {
@@ -239,18 +268,18 @@ describe("transaction forms and mutations", () => {
     expect(within(dialog).getByRole("alert")).toHaveTextContent(
       "gültigen Betrag",
     );
-    expect(api.callsFor("/transactions", "POST")).toHaveLength(0);
+    expect(api.callsFor("/api/v1/transactions", "POST")).toHaveLength(0);
   });
 
   it("saves an expense with a decimal comma and refreshes table, cards and charts", async () => {
     const created = {
       ...expense,
       id: 3,
-      empfaenger_sender: "Demo Einkauf",
-      betrag_euro: "-12.50",
+      counterparty: "Demo Einkauf",
+      amount: "-12.50",
     };
     api.respondWith(
-      "/transactions",
+      "/api/v1/transactions",
       () => {
         api.respondWith(transactionsPath, () =>
           jsonResponse(page([created, expense, income])),
@@ -278,12 +307,12 @@ describe("transaction forms and mutations", () => {
     expect(await screen.findByText("Demo Einkauf")).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const payload = JSON.parse(
-      api.callsFor("/transactions", "POST")[0].options.body,
+      api.callsFor("/api/v1/transactions", "POST")[0].options.body,
     );
     expect(payload).toMatchObject({
-      empfaenger_sender: "Demo Einkauf",
-      betrag_euro: -12.5,
-      kategorie: "Lebensmittel",
+      counterparty: "Demo Einkauf",
+      amount: -12.5,
+      category: "Lebensmittel",
     });
     await waitFor(() =>
       expect(screen.getByText("2.941,68 €")).toBeInTheDocument(),
@@ -297,7 +326,11 @@ describe("transaction forms and mutations", () => {
   });
 
   it("keeps form input and shows the error if saving fails", async () => {
-    api.respondWith("/transactions", () => jsonResponse({}, 500), "POST");
+    api.respondWith(
+      "/api/v1/transactions",
+      () => jsonResponse({}, 500),
+      "POST",
+    );
     await openDashboard();
     const dialog = await fillExpense();
     await user.click(
@@ -316,9 +349,9 @@ describe("transaction forms and mutations", () => {
   });
 
   it("opens an existing transaction in the modal and PATCHes its ID", async () => {
-    const updated = { ...expense, empfaenger_sender: "Neuer Testname" };
+    const updated = { ...expense, counterparty: "Neuer Testname" };
     api.respondWith(
-      "/transactions/1",
+      "/api/v1/transactions/1",
       () => {
         api.respondWith(transactionsPath, () =>
           jsonResponse(page([updated, income])),
@@ -344,16 +377,17 @@ describe("transaction forms and mutations", () => {
     );
     expect(await screen.findByText("Neuer Testname")).toBeInTheDocument();
     expect(
-      JSON.parse(api.callsFor("/transactions/1", "PATCH")[0].options.body)
-        .betrag_euro,
+      JSON.parse(
+        api.callsFor("/api/v1/transactions/1", "PATCH")[0].options.body,
+      ).amount,
     ).toBe(-45.82);
-    expect(api.callsFor("/transactions", "POST")).toHaveLength(0);
+    expect(api.callsFor("/api/v1/transactions", "POST")).toHaveLength(0);
     expect(api.callsFor(summaryPath)).toHaveLength(2);
   });
 
   it("reloads the server page and analytics after deleting", async () => {
     api.respondWith(
-      "/transactions/1",
+      "/api/v1/transactions/1",
       () => {
         api.respondWith(transactionsPath, () => jsonResponse(page([income])));
         api.respondWith(summaryPath, () =>
@@ -377,15 +411,13 @@ describe("transaction forms and mutations", () => {
     await waitFor(() =>
       expect(screen.queryByText("REWE Testmarkt")).not.toBeInTheDocument(),
     );
-    expect(
-      await screen.findByText(income.empfaenger_sender),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(income.counterparty)).toBeInTheDocument();
     await waitFor(() =>
       expect(screen.getByTestId("analytics")).toHaveTextContent(
         '"categories":[]',
       ),
     );
-    expect(api.callsFor("/transactions/1", "DELETE")).toHaveLength(1);
+    expect(api.callsFor("/api/v1/transactions/1", "DELETE")).toHaveLength(1);
   });
 
   it("closes the modal on cancel without writing and restores scroll position", async () => {
@@ -403,6 +435,6 @@ describe("transaction forms and mutations", () => {
       screen.getByRole("button", { name: "Einnahme hinzufügen" }),
     ).toHaveFocus();
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
-    expect(api.callsFor("/transactions", "POST")).toHaveLength(0);
+    expect(api.callsFor("/api/v1/transactions", "POST")).toHaveLength(0);
   });
 });

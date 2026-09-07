@@ -16,6 +16,7 @@ function TransactionsPanel({
   deleteError,
   onPageChange,
   onSortChange,
+  onImport,
   onEdit,
   onDelete,
 }) {
@@ -59,11 +60,20 @@ function TransactionsPanel({
           <p className="eyebrow">Aktivität</p>
           <h2>Letzte Transaktionen</h2>
         </div>
-        <span className="transaction-count">
-          {isLoading
-            ? "Lade Buchungen …"
-            : `${filteredCount} von ${totalCount} Buchungen`}
-        </span>
+        <div className="table-heading-actions">
+          <span className="transaction-count">
+            {isLoading
+              ? "Lade Buchungen …"
+              : `${filteredCount} von ${totalCount} Buchungen`}
+          </span>
+          <button
+            className="secondary-button import-button"
+            type="button"
+            onClick={onImport}
+          >
+            CSV importieren
+          </button>
+        </div>
       </div>
 
       {deleteError && (

@@ -2,23 +2,23 @@ import { vi } from "vitest";
 
 export const expense = {
   id: 1,
-  datum: "2026-09-02",
-  empfaenger_sender: "REWE Testmarkt",
+  booking_date: "2026-09-02",
+  counterparty: "REWE Testmarkt",
   iban: null,
-  verwendungszweck: "Wocheneinkauf",
-  betrag_euro: "-45.82",
-  kategorie: "Lebensmittel",
+  purpose: "Wocheneinkauf",
+  amount: "-45.82",
+  category: "Lebensmittel",
   status: "Gebucht",
 };
 
 export const income = {
   ...expense,
   id: 2,
-  datum: "2026-09-01",
-  empfaenger_sender: "Demo Arbeitgeber",
-  verwendungszweck: "Gehalt",
-  betrag_euro: "3000.00",
-  kategorie: "Gehalt",
+  booking_date: "2026-09-01",
+  counterparty: "Demo Arbeitgeber",
+  purpose: "Gehalt",
+  amount: "3000.00",
+  category: "Gehalt",
 };
 
 export const summary = {

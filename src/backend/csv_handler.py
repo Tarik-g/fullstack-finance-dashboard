@@ -1,239 +1,127 @@
+"""Parse and validate transaction CSV uploads."""
+
+from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
+from io import BytesIO
+
 import pandas as pd
+from pydantic import ValidationError
 
-def read_csv(file_path):
-    """
-    Reads a CSV file and returns a pandas DataFrame.
-    
-    Parameters:
-        file_path (str): The path to the CSV file.
-    
-    Returns:
-        pd.DataFrame: The loaded DataFrame.
-    """
-    return pd.read_csv(file_path, sep=';', encoding='utf-8', parse_dates=['Datum'])
+from .schemas import TransactionCreate
 
 
-def validate_csv(df):
-    """
-    Validates the DataFrame for required columns and data types.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame to validate.
+MAX_CSV_BYTES = 2 * 1024 * 1024
+MAX_CSV_ROWS = 5_000
 
-    Returns:
-        bool: True if the DataFrame is valid, False otherwise.
-    """
-    required_columns = ['Datum', 'Betrag_EURO', 'Kategorie', 'Status', 'Empfänger_Sender', 'Verwendungszweck', 'IBAN']
-    for column in required_columns:
-        if column not in df.columns:
-            print("FEHLENDE SPALTE:", column)
-            return False
-    if not pd.api.types.is_numeric_dtype(df['Betrag_EURO']):
-        return False
-    if not pd.api.types.is_datetime64_any_dtype(df['Datum']):
-        return False
-    if not pd.api.types.is_string_dtype(df['Kategorie']):
-        return False
-    if not pd.api.types.is_string_dtype(df['Status']):
-        return False
-    if not pd.api.types.is_string_dtype(df['Empfänger_Sender']):
-        return False
-    if not pd.api.types.is_string_dtype(df['Verwendungszweck']):
-        return False
-    return True
+COLUMN_ALIASES = {
+    "booking_date": ("booking_date", "Datum"),
+    "counterparty": ("counterparty", "Empfänger_Sender", "Empfaenger_Sender"),
+    "iban": ("iban", "IBAN"),
+    "purpose": ("purpose", "Verwendungszweck"),
+    "amount": ("amount", "Betrag_EURO", "Betrag_Euro"),
+    "category": ("category", "Kategorie"),
+    "status": ("status", "Status"),
+}
+REQUIRED_COLUMNS = ("booking_date", "counterparty", "amount")
 
 
-def calculate_financial_summary(df):
-    """
-    Calculates a financial summary from the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame containing transaction data.
-
-    Returns:
-        dict: A dictionary containing total income, total expenses, and saldo.
-    """
-    total_income = calculate_total_income(df)
-    total_expenses = calculate_total_expenses(df)
-    saldo = calculate_saldo(df)
-    return {
-        'total_income': total_income,
-        'total_expenses': total_expenses,
-        'saldo': saldo
-    }
+class CsvFormatError(ValueError):
+    """Raised when the file itself cannot be processed as a transaction CSV."""
 
 
-
-def calculate_total_income(df):
-    """
-    Calculates the total income from the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame containing transaction data.
-
-    Returns:
-        float: The total income.
-
-    """
-    return df[df['Betrag_EURO'] > 0]['Betrag_EURO'].sum()
+@dataclass(frozen=True)
+class CsvParseResult:
+    total_rows: int
+    transactions: list[dict]
+    errors: list[str]
 
 
-def calculate_total_expenses(df):
-    """
-    Calculates the total expenses from the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame containing transaction data.
+def _find_columns(columns) -> dict[str, str]:
+    normalized = {str(column).strip(): column for column in columns}
+    mapping = {}
+    for public_name, aliases in COLUMN_ALIASES.items():
+        for alias in aliases:
+            if alias in normalized:
+                mapping[public_name] = normalized[alias]
+                break
 
-    Returns:
-        float: The total expenses.
-
-    """
-    return abs(df[df['Betrag_EURO'] < 0]['Betrag_EURO'].sum())
-
-
-def calculate_expenses_per_category(df):
-    """
-    Calculates the total expenses per category from the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame containing transaction data.
-
-    Returns:
-        pd.Series: A Series with categories as index and total expenses as values.
-
-    """
-    return abs(df[df['Betrag_EURO'] < 0].groupby('Kategorie')['Betrag_EURO'].sum())
+    missing = [column for column in REQUIRED_COLUMNS if column not in mapping]
+    if missing:
+        raise CsvFormatError(
+            "Required columns are missing: " + ", ".join(missing) + "."
+        )
+    return mapping
 
 
-def calculate_saldo(df):
-    """
-    Calculates the saldo (total income - total expenses) from the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame containing transaction data.
-
-    Returns:
-        float: The saldo.
-
-    """
-    total_income = calculate_total_income(df)
-    total_expenses = calculate_total_expenses(df)
-    return total_income - total_expenses
+def _parse_amount(value) -> Decimal:
+    text = str(value).strip().replace(" ", "")
+    if not text:
+        raise InvalidOperation
+    if "," in text and "." in text:
+        if text.rfind(",") > text.rfind("."):
+            text = text.replace(".", "").replace(",", ".")
+        else:
+            text = text.replace(",", "")
+    elif "," in text:
+        text = text.replace(",", ".")
+    return Decimal(text)
 
 
-def calculate_missing_cells(df):
-    """
-    Returns the number of missing cells in the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame to check for missing cells.
-
-    Returns:
-        pd.Series: A Series with column names as index and number of missing cells as values.
-
-    """
-    return df.isnull().sum()
+def _validation_message(error: ValidationError) -> str:
+    first_error = error.errors()[0]
+    field = ".".join(str(part) for part in first_error["loc"])
+    return f"{field}: {first_error['msg']}"
 
 
-def calculate_duplicate_rows(df):
-    """
-    Returns the duplicate rows in the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame to check for duplicate rows.
+def parse_transaction_csv(content: bytes) -> CsvParseResult:
+    if not content:
+        raise CsvFormatError("The CSV file is empty.")
+    if len(content) > MAX_CSV_BYTES:
+        raise CsvFormatError("The CSV file exceeds the 2 MB limit.")
 
-    Returns:
-        pd.DataFrame: A DataFrame containing the duplicate rows.
+    try:
+        frame = pd.read_csv(
+            BytesIO(content),
+            sep=None,
+            engine="python",
+            dtype=str,
+            keep_default_na=False,
+            encoding="utf-8-sig",
+        )
+    except (UnicodeDecodeError, pd.errors.ParserError) as error:
+        raise CsvFormatError("The file must be a valid UTF-8 CSV.") from error
 
-    """
-    return df[df.duplicated(keep=False)]
+    if len(frame.index) > MAX_CSV_ROWS:
+        raise CsvFormatError(f"The CSV file may contain at most {MAX_CSV_ROWS} rows.")
 
-def calculate_duplicate_count(df):
-    """
-    Returns the number of duplicate rows in the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame to check for duplicate rows.
+    column_mapping = _find_columns(frame.columns)
+    transactions = []
+    errors = []
 
-    Returns:
-        int: The number of duplicate rows.
+    for index, source_row in frame.iterrows():
+        row_number = index + 2
+        values = {
+            public_name: source_row[source_name]
+            for public_name, source_name in column_mapping.items()
+        }
+        for optional_field in ("iban", "purpose", "category", "status"):
+            values.setdefault(optional_field, None)
 
-    """
-    return df.duplicated().sum()
+        try:
+            values["amount"] = _parse_amount(values["amount"])
+            transaction = TransactionCreate.model_validate(values)
+        except (InvalidOperation, ValidationError) as error:
+            if isinstance(error, ValidationError):
+                reason = _validation_message(error)
+            else:
+                reason = "amount: value is not a valid number"
+            errors.append(f"Row {row_number}: {reason}")
+            continue
 
-def calculate_expenses_per_month(df, month, year):
-    """
-    Calculates the total expenses for a specific month and year from the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame containing transaction data.
-        month (int): The month for which to calculate expenses (1-12).
-        year (int): The year for which to calculate expenses.
+        transactions.append(transaction.model_dump())
 
-    Returns:
-        float: The total expenses for the specified month and year.
-
-    """
-    filtered_df = df[(df['Datum'].dt.month == month) & (df['Datum'].dt.year == year)]
-    return abs(filtered_df[filtered_df['Betrag_EURO'] < 0]['Betrag_EURO'].sum())
-
-def calculate_expenses_for_all_months(df):
-    """
-    Calculates the total expenses for each month in the DataFrame.
-    
-    Parameters:
-        df (pd.DataFrame): The DataFrame containing transaction data.
-
-    Returns:
-        pd.Series: A Series with (year, month) as index and total expenses as values.
-
-    """
-    expenses = df[df['Betrag_EURO'] < 0]
-
-    return abs(
-        expenses.groupby(
-            expenses['Datum'].dt.to_period('M')
-        )['Betrag_EURO'].sum()
+    return CsvParseResult(
+        total_rows=len(frame.index),
+        transactions=transactions,
+        errors=errors,
     )
-
-
-def remove_csv_duplicates(df):
-    before = len(df)
-
-    df_clean = df.drop_duplicates()
-
-    after = len(df_clean)
-
-    print(f"Removed {before - after} duplicate rows.")
-
-    return df_clean
-
-
-if __name__ == "__main__":
-    file_path = 'C:\\Users\\Tarik\\Desktop\\Dateien\\Code\\fullstack-finance-dashboard\\data\\transactions.csv'
-    df = read_csv(file_path)
-    
-    if validate_csv(df):
-        summary = calculate_financial_summary(df)
-        print("Financial Summary:", summary)
-        
-        expenses_per_category = calculate_expenses_per_category(df)
-        print("Expenses per Category:\n", expenses_per_category)
-        
-        missing_cells = calculate_missing_cells(df)
-        print("Missing Cells:\n", missing_cells)
-        
-        duplicate_rows = calculate_duplicate_rows(df)
-        print("Duplicate Rows:\n", duplicate_rows)
-        
-        duplicate_count = calculate_duplicate_count(df)
-        print("Number of Duplicate Rows:", duplicate_count)
-        
-        expenses_per_month = calculate_expenses_per_month(df, 8, 2026)
-        print("Expenses for August 2026:", expenses_per_month)
-
-        expenses_for_all_months = calculate_expenses_for_all_months(df)
-        print("Expenses for All Months:\n", expenses_for_all_months)
-    else:
-        print("CSV file is not valid.")

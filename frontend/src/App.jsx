@@ -1,16 +1,20 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   createTransaction,
   deleteTransaction,
   updateTransaction,
 } from "./api/financeApi";
-import AnalyticsDashboard from "./components/AnalyticsDashboard";
+import CsvImportModal from "./components/CsvImportModal";
 import DashboardHeader from "./components/DashboardHeader";
 import DashboardFilters from "./components/DashboardFilters";
 import SummaryCards from "./components/SummaryCards";
 import TransactionModal from "./components/TransactionModal";
 import TransactionsPanel from "./components/TransactionsPanel";
 import useDashboardData from "./hooks/useDashboardData";
+
+const AnalyticsDashboard = lazy(
+  () => import("./components/AnalyticsDashboard"),
+);
 
 function getLocalDateString() {
   const now = new Date();
@@ -54,6 +58,14 @@ function App() {
     getLocalDateString().slice(0, 7),
   );
   const [dataVersion, setDataVersion] = useState(0);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importScrollPosition, setImportScrollPosition] = useState(0);
+  const [isSlowStartup, setIsSlowStartup] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => setIsSlowStartup(true), 3_500);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   useEffect(() => {
     if (searchTerm === debouncedSearch) return;
@@ -278,7 +290,16 @@ function App() {
   }
 
   if (!metadata.data && metadata.isLoading) {
-    return <div className="state-screen">Transaktionen werden geladen ...</div>;
+    return (
+      <div className="state-screen" role="status">
+        <strong>Transaktionen werden geladen …</strong>
+        {isSlowStartup && (
+          <span>
+            Das kostenlose Demo-Backend wird möglicherweise gerade gestartet.
+          </span>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -340,12 +361,16 @@ function App() {
         {analyticsRequest.error ? (
           <p className="panel">Diagramme konnten nicht geladen werden.</p>
         ) : (
-          <AnalyticsDashboard
-            timeline={analyticsRequest.data?.timeline ?? []}
-            categories={analyticsRequest.data?.categories ?? []}
-            periodMode={periodMode}
-            isLoading={isAnalyticsLoading}
-          />
+          <Suspense
+            fallback={<p className="panel">Diagramme werden geladen …</p>}
+          >
+            <AnalyticsDashboard
+              timeline={analyticsRequest.data?.timeline ?? []}
+              categories={analyticsRequest.data?.categories ?? []}
+              periodMode={periodMode}
+              isLoading={isAnalyticsLoading}
+            />
+          </Suspense>
         )}
 
         <TransactionsPanel
@@ -364,6 +389,10 @@ function App() {
           deleteError={deleteError}
           onPageChange={setCurrentPage}
           onSortChange={handleSortChange}
+          onImport={() => {
+            setImportScrollPosition(window.scrollY);
+            setIsImportOpen(true);
+          }}
           onEdit={handleEditTransaction}
           onDelete={handleDeleteTransaction}
         />
@@ -381,6 +410,14 @@ function App() {
           onFieldChange={handleTransactionFieldChange}
           onSubmit={handleSubmitTransaction}
           onClose={resetTransactionForm}
+        />
+      )}
+
+      {isImportOpen && (
+        <CsvImportModal
+          scrollPosition={importScrollPosition}
+          onImported={() => setDataVersion((version) => version + 1)}
+          onClose={() => setIsImportOpen(false)}
         />
       )}
     </div>

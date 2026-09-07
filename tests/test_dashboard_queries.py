@@ -50,7 +50,17 @@ class DashboardQueryTests(unittest.TestCase):
         self.assertEqual(year, [date(2025, 1, 1), date(2026, 1, 1)])
 
     def test_second_page_uses_limit_offset_and_stable_order(self):
-        connection, cursor = mock_connection(count=400, rows=[("example",)])
+        row = (
+            7,
+            date(2026, 9, 2),
+            "Demo Shop",
+            None,
+            "Test purchase",
+            Decimal("-45.82"),
+            "Lebensmittel",
+            "Gebucht",
+        )
+        connection, cursor = mock_connection(count=400, rows=[row])
         result = get_paginated_transactions(
             connection, page=2, page_size=10, sort_by="amount", sort_direction="asc",
         )
@@ -59,7 +69,7 @@ class DashboardQueryTests(unittest.TestCase):
         self.assertEqual(parameters, [10, 10])
         self.assertEqual(result["total_pages"], 40)
         self.assertEqual(result["page"], 2)
-        self.assertEqual(result["items"], [("example",)])
+        self.assertEqual(result["items"][0]["counterparty"], "Demo Shop")
 
     def test_page_is_clamped_after_last_row_disappears(self):
         connection, cursor = mock_connection(count=10)

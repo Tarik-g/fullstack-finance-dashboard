@@ -17,12 +17,12 @@ async function request(path, options, errorMessage) {
 
 function toApiTransaction(transaction) {
   return {
-    datum: transaction.bookingDate,
-    empfaenger_sender: transaction.counterparty,
+    booking_date: transaction.bookingDate,
+    counterparty: transaction.counterparty,
     iban: transaction.iban || null,
-    verwendungszweck: transaction.purpose || null,
-    betrag_euro: transaction.amount,
-    kategorie: transaction.category || null,
+    purpose: transaction.purpose || null,
+    amount: transaction.amount,
+    category: transaction.category || null,
     status: transaction.status || null,
   };
 }
@@ -30,12 +30,12 @@ function toApiTransaction(transaction) {
 function toFrontendTransaction(transaction) {
   return {
     id: transaction.id,
-    bookingDate: transaction.datum,
-    counterparty: transaction.empfaenger_sender,
+    bookingDate: transaction.booking_date,
+    counterparty: transaction.counterparty,
     iban: transaction.iban,
-    purpose: transaction.verwendungszweck,
-    amount: Number(transaction.betrag_euro),
-    category: transaction.kategorie,
+    purpose: transaction.purpose,
+    amount: Number(transaction.amount),
+    category: transaction.category,
     status: transaction.status,
   };
 }
@@ -130,7 +130,7 @@ export async function getCategoryTotals(parameters, options) {
 
 export function createTransaction(transaction) {
   return request(
-    "/transactions",
+    "/api/v1/transactions",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -142,7 +142,7 @@ export function createTransaction(transaction) {
 
 export function updateTransaction(id, transaction) {
   return request(
-    `/transactions/${id}`,
+    `/api/v1/transactions/${id}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -154,8 +154,19 @@ export function updateTransaction(id, transaction) {
 
 export function deleteTransaction(id) {
   return request(
-    `/transactions/${id}`,
+    `/api/v1/transactions/${id}`,
     { method: "DELETE" },
     "Transaktion konnte nicht gelöscht werden",
+  );
+}
+
+export function importTransactionsCsv(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request(
+    "/api/v1/imports/csv",
+    { method: "POST", body: formData },
+    "CSV-Datei konnte nicht importiert werden",
   );
 }

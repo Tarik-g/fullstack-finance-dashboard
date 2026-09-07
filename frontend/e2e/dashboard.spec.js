@@ -72,7 +72,7 @@ async function expectTotals(page, { balance, expenses, food, rent }) {
 async function saveAndCheck(page, button, method, status) {
   const response = page.waitForResponse(
     (response) =>
-      response.url().startsWith("http://127.0.0.1:8001/transactions") &&
+      response.url().startsWith("http://127.0.0.1:8001/api/v1/transactions") &&
       response.request().method() === method,
   );
   await button.click();
@@ -216,7 +216,7 @@ test("create, edit and delete persist in PostgreSQL and refresh the whole dashbo
         exact: true,
       }),
       "DELETE",
-      200,
+      204,
     );
     await expect(
       page.getByRole("row").filter({ hasText: "Playwright aktualisiert" }),
@@ -288,4 +288,46 @@ test("modal remains keyboard accessible and does not write on Escape", async ({
   await expect(trigger).toBeFocused();
   await expectNoHorizontalOverflow(page);
   expect(await database("snapshot")).toHaveLength(3);
+});
+
+test("CSV import persists valid rows and reports duplicates and errors", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "CSV importieren" }).click();
+  const dialog = page.getByRole("dialog", { name: "CSV importieren" });
+  const csv = [
+    "booking_date,counterparty,iban,purpose,amount,category,status",
+    "2026-09-04,CSV Test,DE12345678901234567890,Upload,-15.50,Freizeit,Gebucht",
+    "2026-09-04,CSV Test,DE12345678901234567890,Upload,-15.50,Freizeit,Gebucht",
+    "invalid-date,Kaputte Zeile,DE999,Upload,-4.00,Freizeit,Gebucht",
+  ].join("\n");
+
+  await dialog.getByLabel("CSV-Datei").setInputFiles({
+    name: "transactions.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(csv),
+  });
+  const response = page.waitForResponse(
+    (candidate) =>
+      candidate.url().endsWith("/api/v1/imports/csv") &&
+      candidate.request().method() === "POST",
+  );
+  await dialog.getByRole("button", { name: "Datei importieren" }).click();
+  expect((await response).status()).toBe(200);
+  await expect(dialog.getByText("Import abgeschlossen")).toBeVisible();
+  await expect(dialog.locator("dl")).toContainText("Eingefügt1");
+  await expect(dialog.locator("dl")).toContainText("Duplikate1");
+  await expect(dialog.locator("dl")).toContainText("Fehlerhaft1");
+  await dialog.getByRole("button", { name: "Schließen", exact: true }).click();
+
+  await expect(
+    page.getByRole("row").filter({ hasText: "CSV Test" }),
+  ).toContainText(money(-15.5));
+  const rows = await database("snapshot");
+  expect(rows).toHaveLength(4);
+  expect(rows.find((row) => row.counterparty === "CSV Test")).toMatchObject({
+    amount: "-15.50",
+    category: "Freizeit",
+  });
 });

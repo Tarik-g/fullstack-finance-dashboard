@@ -829,6 +829,89 @@ p[role="alert"] {
   margin: 0;
 }
 
+.table-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.import-button {
+  min-height: 36px;
+  padding: 0.45rem 0.72rem;
+  font-size: 0.75rem;
+}
+
+.import-dialog {
+  width: min(650px, calc(100% - 2rem));
+}
+
+.import-description {
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.import-form,
+.import-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.import-form label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.import-form input[type="file"] {
+  height: auto;
+}
+
+.import-report {
+  padding: 1rem;
+  background: rgba(61, 220, 151, 0.07);
+  border: 1px solid rgba(61, 220, 151, 0.25);
+  border-radius: var(--radius-medium);
+}
+
+.import-report > strong {
+  color: var(--positive);
+}
+
+.import-report dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+}
+
+.import-report dl div {
+  padding: 0.75rem;
+  background: rgba(7, 11, 20, 0.38);
+  border-radius: 0.5rem;
+}
+
+.import-report dt {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.import-report dd {
+  margin: 0.25rem 0 0;
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 750;
+}
+
+.import-report details {
+  margin-top: 1rem;
+  color: var(--text-muted);
+}
+
+.import-report li {
+  margin-top: 0.4rem;
+}
+
 .transactions-panel > .form-error {
   margin: 0 1.5rem 1rem;
 }
@@ -1175,6 +1258,16 @@ td:nth-child(6) {
   .status-pill,
   .transaction-count {
     align-self: flex-start;
+  }
+
+  .table-heading-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .import-report dl {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .filter-summary {

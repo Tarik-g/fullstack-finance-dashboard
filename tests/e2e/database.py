@@ -2,6 +2,7 @@
 
 import json
 import os
+from pathlib import Path
 import re
 import sys
 
@@ -42,20 +43,8 @@ def connect():
 def seed():
     """Reset ONLY the generated database, before every browser test/retry."""
     with connect() as connection, connection.cursor() as cursor:
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS public.transactions (
-                id SERIAL PRIMARY KEY,
-                datum DATE NOT NULL,
-                empfaenger_sender VARCHAR(255) NOT NULL,
-                iban VARCHAR(34),
-                verwendungszweck TEXT,
-                betrag_euro NUMERIC(12, 2) NOT NULL,
-                kategorie VARCHAR(100),
-                status VARCHAR(50),
-                UNIQUE (datum, empfaenger_sender, iban, verwendungszweck,
-                        betrag_euro, kategorie, status)
-            );
-        """)
+        schema_path = Path(__file__).resolve().parents[2] / "data" / "schema.sql"
+        cursor.execute(schema_path.read_text(encoding="utf-8"))
         cursor.execute("TRUNCATE public.transactions RESTART IDENTITY")
         cursor.executemany("""
             INSERT INTO public.transactions
