@@ -4,6 +4,9 @@ Fullstack-Dashboard zum Erfassen, Filtern und Auswerten synthetischer
 Banktransaktionen. React stellt die Oberfläche dar, FastAPI liefert die REST-API
 und PostgreSQL speichert die Daten.
 
+**Live-Demo:** [Finance Dashboard öffnen](https://finance-dashboard-ptbf.onrender.com)  
+**API-Dokumentation:** [Swagger UI öffnen](https://finance-dashboard-api-rs1u.onrender.com/docs)
+
 ![Finance Dashboard](docs/assets/dashboard.png)
 
 ## Funktionen
