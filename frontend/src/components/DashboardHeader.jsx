@@ -3,7 +3,18 @@ function DashboardHeader({ name, onAddIncome, onAddExpense }) {
     <header className="dashboard-header">
       <div className="topbar">
         <div className="brand">
-          <div className="brand-mark">F</div>
+          <div className="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64" focusable="false">
+              <path
+                className="brand-bars"
+                d="M14 48V35h8v13h-8Zm14 0V26h8v22h-8Zm14 0V16h8v32h-8Z"
+              />
+              <path
+                className="brand-line"
+                d="m14 29 12-9 9 4 15-12"
+              />
+            </svg>
+          </div>
           <strong className="brand-name">Finance Dashboard</strong>
         </div>
 
@@ -12,7 +23,7 @@ function DashboardHeader({ name, onAddIncome, onAddExpense }) {
             <span>Willkommen zurück</span>
             <strong>{name}</strong>
           </div>
-          <div className="avatar">TW</div>
+          <div className="avatar">T</div>
         </div>
       </div>
 

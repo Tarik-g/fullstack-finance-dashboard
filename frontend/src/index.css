@@ -202,6 +202,24 @@ p {
   font-size: 1.25rem;
 }
 
+.brand-mark svg {
+  width: 32px;
+  height: 32px;
+}
+
+.brand-bars {
+  fill: currentColor;
+  opacity: 0.55;
+}
+
+.brand-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
 .brand-name {
   font-size: 1rem;
   letter-spacing: -0.01em;
