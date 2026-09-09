@@ -14,6 +14,7 @@ if __name__ == "__main__":
         "DB_NAME": info["dbname"], "DB_HOST": info["host"], "DB_PORT": info["port"],
         "DB_USER": info["user"], "DB_PASSWORD": info["password"],
         "CORS_ORIGINS": "http://127.0.0.1:4173",
+        "DEMO_MODE": "true",
         "PYTHON_DOTENV_DISABLED": "1",
     })
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))

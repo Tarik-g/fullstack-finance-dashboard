@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from .. import database
-from ..dependencies import DatabaseConnection
+from ..dependencies import DatabaseConnection, DemoSessionId
 from ..schemas import (
     PaginatedTransactionsResponse,
     TransactionCreate,
@@ -26,6 +26,7 @@ def _validate_period(year: int | None, month: int | None) -> None:
 @router.get("", response_model=PaginatedTransactionsResponse)
 def list_transactions(
     connection: DatabaseConnection,
+    demo_session_id: DemoSessionId,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=10, ge=1, le=100),
     search: str | None = Query(default=None, max_length=100),
@@ -48,12 +49,19 @@ def list_transactions(
         month=month,
         sort_by=sort_by,
         sort_direction=sort_direction,
+        demo_session_id=demo_session_id,
     )
 
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)
-def get_transaction(transaction_id: int, connection: DatabaseConnection):
-    transaction = database.get_transaction_by_id(connection, transaction_id)
+def get_transaction(
+    transaction_id: int,
+    connection: DatabaseConnection,
+    demo_session_id: DemoSessionId,
+):
+    transaction = database.get_transaction_by_id(
+        connection, transaction_id, demo_session_id=demo_session_id
+    )
     if transaction is None:
         raise HTTPException(status_code=404, detail="Transaction not found.")
     return transaction
@@ -63,8 +71,13 @@ def get_transaction(transaction_id: int, connection: DatabaseConnection):
 def create_transaction(
     transaction: TransactionCreate,
     connection: DatabaseConnection,
+    demo_session_id: DemoSessionId,
 ):
-    created = database.insert_transaction(connection, transaction.model_dump())
+    created = database.insert_transaction(
+        connection,
+        transaction.model_dump(),
+        demo_session_id=demo_session_id,
+    )
     if created is None:
         raise HTTPException(status_code=409, detail="Transaction already exists.")
     return created
@@ -75,19 +88,31 @@ def update_transaction(
     transaction_id: int,
     transaction: TransactionUpdate,
     connection: DatabaseConnection,
+    demo_session_id: DemoSessionId,
 ):
     updates = transaction.model_dump(exclude_unset=True)
     if not updates:
         raise HTTPException(status_code=400, detail="At least one field is required.")
 
-    updated = database.update_transaction_by_id(connection, transaction_id, updates)
+    updated = database.update_transaction_by_id(
+        connection,
+        transaction_id,
+        updates,
+        demo_session_id=demo_session_id,
+    )
     if updated is None:
         raise HTTPException(status_code=404, detail="Transaction not found.")
     return updated
 
 
 @router.delete("/{transaction_id}", status_code=204)
-def delete_transaction(transaction_id: int, connection: DatabaseConnection):
-    if not database.delete_transaction_by_id(connection, transaction_id):
+def delete_transaction(
+    transaction_id: int,
+    connection: DatabaseConnection,
+    demo_session_id: DemoSessionId,
+):
+    if not database.delete_transaction_by_id(
+        connection, transaction_id, demo_session_id=demo_session_id
+    ):
         raise HTTPException(status_code=404, detail="Transaction not found.")
     return Response(status_code=204)

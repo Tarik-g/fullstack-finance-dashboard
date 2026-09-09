@@ -25,8 +25,16 @@ def mock_connection(count=0, rows=None):
 class DashboardQueryTests(unittest.TestCase):
     def test_no_filters_uses_all_rows(self):
         where, parameters = _build_transaction_filters()
-        self.assertEqual(where.as_string(), " WHERE TRUE")
+        self.assertEqual(where.as_string(), " WHERE demo_session_id IS NULL")
         self.assertEqual(parameters, [])
+
+    def test_demo_session_is_the_first_bound_filter(self):
+        session_id = "887a9cf3-7c96-4c5c-91c9-9b54dc21de6d"
+        where, parameters = _build_transaction_filters(
+            search="REWE", demo_session_id=session_id
+        )
+        self.assertIn("demo_session_id = %s", where.as_string())
+        self.assertEqual(parameters, [session_id, "%REWE%"])
 
     def test_filters_use_bound_parameters(self):
         where, parameters = _build_transaction_filters(

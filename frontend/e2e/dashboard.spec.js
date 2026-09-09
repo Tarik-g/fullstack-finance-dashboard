@@ -7,17 +7,23 @@ const execute = promisify(execFile);
 const databaseScript = fileURLToPath(
   new URL("../../tests/e2e/database.py", import.meta.url),
 );
+const sessionStorageKey = "finance-dashboard-demo-session-id";
 const money = (value) =>
   new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(
     value,
   );
 
-async function database(command) {
+async function database(command, sessionId) {
   const { stdout } = await execute(process.env.E2E_PYTHON, [
     databaseScript,
     command,
+    ...(sessionId ? [sessionId] : []),
   ]);
   return command === "snapshot" ? JSON.parse(stdout) : undefined;
+}
+
+function getSessionId(page) {
+  return page.evaluate((key) => localStorage.getItem(key), sessionStorageKey);
 }
 
 async function expectTotals(page, { balance, expenses, food, rent }) {
@@ -107,6 +113,7 @@ test("create, edit and delete persist in PostgreSQL and refresh the whole dashbo
   });
 
   await page.goto("/");
+  const sessionId = await getSessionId(page);
   await expectTotals(page, {
     balance: 1900,
     expenses: 1100,
@@ -114,7 +121,7 @@ test("create, edit and delete persist in PostgreSQL and refresh the whole dashbo
     rent: 1000,
   });
   await expectNoHorizontalOverflow(page);
-  expect(await database("snapshot")).toHaveLength(3);
+  expect(await database("snapshot", sessionId)).toHaveLength(3);
 
   await test.step("create an expense in the modal", async () => {
     await page
@@ -153,7 +160,7 @@ test("create, edit and delete persist in PostgreSQL and refresh the whole dashbo
       food: 112.5,
       rent: 1000,
     });
-    const rows = await database("snapshot");
+    const rows = await database("snapshot", sessionId);
     expect(rows).toHaveLength(4);
     expect(
       rows.find((row) => row.counterparty === "Playwright Einkauf"),
@@ -201,7 +208,7 @@ test("create, edit and delete persist in PostgreSQL and refresh the whole dashbo
       food: 100,
       rent: 1025,
     });
-    const rows = await database("snapshot");
+    const rows = await database("snapshot", sessionId);
     expect(rows).toHaveLength(4);
     expect(
       rows.find((row) => row.counterparty === "Playwright aktualisiert"),
@@ -240,7 +247,7 @@ test("create, edit and delete persist in PostgreSQL and refresh the whole dashbo
       food: 100,
       rent: 1000,
     });
-    expect(await database("snapshot")).toHaveLength(3);
+    expect(await database("snapshot", sessionId)).toHaveLength(3);
   });
 
   await expectNoHorizontalOverflow(page);
@@ -255,6 +262,7 @@ test("modal remains keyboard accessible and does not write on Escape", async ({
   page,
 }) => {
   await page.goto("/");
+  const sessionId = await getSessionId(page);
   const trigger = page.getByRole("button", {
     name: "Einnahme hinzufügen",
     exact: true,
@@ -287,13 +295,14 @@ test("modal remains keyboard accessible and does not write on Escape", async ({
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
   await expectNoHorizontalOverflow(page);
-  expect(await database("snapshot")).toHaveLength(3);
+  expect(await database("snapshot", sessionId)).toHaveLength(3);
 });
 
 test("CSV import persists valid rows and reports duplicates and errors", async ({
   page,
 }) => {
   await page.goto("/");
+  const sessionId = await getSessionId(page);
   await page.getByRole("button", { name: "CSV importieren" }).click();
   const dialog = page.getByRole("dialog", { name: "CSV importieren" });
   const csv = [
@@ -324,10 +333,82 @@ test("CSV import persists valid rows and reports duplicates and errors", async (
   await expect(
     page.getByRole("row").filter({ hasText: "CSV Test" }),
   ).toContainText(money(-15.5));
-  const rows = await database("snapshot");
+  const rows = await database("snapshot", sessionId);
   expect(rows).toHaveLength(4);
   expect(rows.find((row) => row.counterparty === "CSV Test")).toMatchObject({
     amount: "-15.50",
     category: "Freizeit",
   });
+});
+
+test("each browser receives an isolated demo dataset", async ({
+  page,
+  browser,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Einnahme hinzufügen", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", {
+    name: "Einnahme hinzufügen",
+    exact: true,
+  });
+  await dialog.getByLabel("Datum", { exact: true }).fill("2026-09-05");
+  await dialog.getByLabel(/^Betrag/).fill("123,45");
+  await dialog
+    .getByLabel("Empfänger / Sender", { exact: true })
+    .fill("Nur Browser A");
+  await saveAndCheck(
+    page,
+    dialog.getByRole("button", { name: "Einnahme speichern" }),
+    "POST",
+    201,
+  );
+  await expect(page.getByText("Nur Browser A", { exact: true })).toBeVisible();
+
+  const secondContext = await browser.newContext({
+    baseURL: "http://127.0.0.1:4173",
+    locale: "de-DE",
+    timezoneId: "Europe/Berlin",
+  });
+  try {
+    const secondPage = await secondContext.newPage();
+    await secondPage.goto("/");
+    await expect(
+      secondPage.getByText("Nur Browser A", { exact: true }),
+    ).toHaveCount(0);
+    await expectTotals(secondPage, {
+      balance: 1900,
+      expenses: 1100,
+      food: 100,
+      rent: 1000,
+    });
+
+    const firstSessionId = await getSessionId(page);
+    const secondSessionId = await getSessionId(secondPage);
+    expect(firstSessionId).not.toBe(secondSessionId);
+    expect(await database("snapshot", secondSessionId)).toHaveLength(3);
+    const firstRows = await database("snapshot", firstSessionId);
+    expect(firstRows).toHaveLength(4);
+
+    const browserAOnlyRow = firstRows.find(
+      (row) => row.counterparty === "Nur Browser A",
+    );
+    expect(browserAOnlyRow).toBeDefined();
+    const forbiddenUpdate = await secondPage.request.patch(
+      `http://127.0.0.1:8001/api/v1/transactions/${browserAOnlyRow.id}`,
+      {
+        headers: { "X-Demo-Session-ID": secondSessionId },
+        data: { amount: "999.00" },
+      },
+    );
+    expect(forbiddenUpdate.status()).toBe(404);
+    expect(
+      (await database("snapshot", firstSessionId)).find(
+        (row) => row.id === browserAOnlyRow.id,
+      ).amount,
+    ).toBe("123.45");
+  } finally {
+    await secondContext.close();
+  }
 });

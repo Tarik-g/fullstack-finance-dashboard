@@ -12,6 +12,7 @@ und PostgreSQL speichert die Daten.
 ## Funktionen
 
 - Transaktionen anlegen, bearbeiten und löschen
+- Eigene temporäre Demodaten pro Browser statt einer gemeinsam veränderbaren Liste
 - Suche, Filter, Sortierung und Pagination
 - Kennzahlen und Diagramme nach Monat, Jahr und Kategorie
 - CSV-Import mit Prüfung und Duplikaterkennung
@@ -91,5 +92,9 @@ Entwicklungsdaten werden dabei nicht verändert.
 2. Die Frontend-Adresse als `CORS_ORIGINS`
 3. Die API-Adresse als `VITE_API_BASE_URL`
 
-Mit `DEMO_MODE=true` wird die öffentliche Datenbank bei jedem Backend-Start auf
-die synthetischen Beispieldaten von 2025 und 2026 zurückgesetzt.
+Mit `DEMO_MODE=true` erhält jeder Browser eine eigene temporäre Kopie der
+synthetischen Beispieldaten. Andere Besucher sehen Änderungen deshalb nicht.
+Ungenutzte Demo-Sitzungen werden nach 24 Stunden automatisch entfernt; bei
+jedem Backend-Start wird zusätzlich die gemeinsame Vorlage zurückgesetzt.
+Die Browser-ID wird lokal erzeugt und bei API-Aufrufen als
+`X-Demo-Session-ID`-Header übertragen.

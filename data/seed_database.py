@@ -238,7 +238,7 @@ def write_csv(transactions):
 
 
 def replace_database_transactions(transactions):
-    """Atomically replace only the rows in public.transactions."""
+    """Atomically replace the template rows and clear anonymous demo sessions."""
     connection = get_postgres_connection()
     if connection is None:
         raise ConnectionError("Could not connect to PostgreSQL.")
@@ -258,7 +258,14 @@ def replace_database_transactions(transactions):
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute("TRUNCATE TABLE public.transactions RESTART IDENTITY;")
+            cursor.execute(
+                """
+                TRUNCATE TABLE
+                    public.transactions,
+                    public.demo_sessions
+                RESTART IDENTITY;
+                """
+            )
             cursor.executemany(
                 insert_query,
                 [transaction.as_database_row() for transaction in transactions],

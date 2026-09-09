@@ -35,6 +35,9 @@ API_TO_DATABASE_COLUMNS = {
     "status": "status",
 }
 
+DEMO_SESSION_TTL_HOURS = 24
+MAX_DEMO_SESSIONS = 100
+
 
 def _transaction_from_row(row):
     if row is None:
@@ -72,16 +75,93 @@ def get_postgres_connection():
         return None
 
 
+def prepare_demo_session(connection, demo_session_id):
+    """Create an isolated transaction copy for one anonymous demo browser."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                DELETE FROM public.demo_sessions
+                WHERE last_seen_at < CURRENT_TIMESTAMP - INTERVAL '{DEMO_SESSION_TTL_HOURS} hours'
+                   OR id IN (
+                        SELECT id
+                        FROM public.demo_sessions
+                        ORDER BY last_seen_at DESC
+                        OFFSET {MAX_DEMO_SESSIONS - 1}
+                   );
+                """
+            )
+            cursor.execute(
+                """
+                INSERT INTO public.demo_sessions (id)
+                VALUES (%s)
+                ON CONFLICT DO NOTHING
+                RETURNING id;
+                """,
+                (demo_session_id,),
+            )
+            is_new_session = cursor.fetchone() is not None
+
+            if is_new_session:
+                cursor.execute(
+                    """
+                    INSERT INTO public.transactions (
+                        datum,
+                        empfaenger_sender,
+                        iban,
+                        verwendungszweck,
+                        betrag_euro,
+                        kategorie,
+                        status,
+                        demo_session_id
+                    )
+                    SELECT
+                        datum,
+                        empfaenger_sender,
+                        iban,
+                        verwendungszweck,
+                        betrag_euro,
+                        kategorie,
+                        status,
+                        %s
+                    FROM public.transactions
+                    WHERE demo_session_id IS NULL;
+                    """,
+                    (demo_session_id,),
+                )
+            else:
+                cursor.execute(
+                    """
+                    UPDATE public.demo_sessions
+                    SET last_seen_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                      AND last_seen_at < CURRENT_TIMESTAMP - INTERVAL '5 minutes';
+                    """,
+                    (demo_session_id,),
+                )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+
+
+def _demo_session_filter(demo_session_id):
+    if demo_session_id is None:
+        return sql.SQL("demo_session_id IS NULL"), []
+    return sql.SQL("demo_session_id = %s"), [demo_session_id]
+
+
 def _build_transaction_filters(
     search=None,
     transaction_type="all",
     category=None,
     year=None,
     month=None,
+    demo_session_id=None,
 ):
     """Build a reusable, parameterised WHERE clause for dashboard queries."""
-    conditions = []
-    parameters = []
+    session_condition, parameters = _demo_session_filter(demo_session_id)
+    conditions = [session_condition]
 
     if search and search.strip():
         conditions.append(
@@ -122,8 +202,6 @@ def _build_transaction_filters(
         conditions.extend((sql.SQL("datum >= %s"), sql.SQL("datum < %s")))
         parameters.extend((period_start, period_end))
 
-    if not conditions:
-        return sql.SQL(" WHERE TRUE"), parameters
     return sql.SQL(" WHERE ") + sql.SQL(" AND ").join(conditions), parameters
 
 
@@ -138,6 +216,7 @@ def get_paginated_transactions(
     month=None,
     sort_by="booking_date",
     sort_direction="desc",
+    demo_session_id=None,
 ):
     """Return a filtered transaction page with pagination metadata."""
     where_clause, parameters = _build_transaction_filters(
@@ -146,6 +225,7 @@ def get_paginated_transactions(
         category=category,
         year=year,
         month=month,
+        demo_session_id=demo_session_id,
     )
     sort_columns = {
         "booking_date": sql.Identifier("datum"),
@@ -193,16 +273,23 @@ def get_paginated_transactions(
     }
 
 
-def get_transaction_summary(connection):
+def get_transaction_summary(connection, demo_session_id=None):
+    where_clause, parameters = _build_transaction_filters(
+        demo_session_id=demo_session_id
+    )
     with connection.cursor() as cursor:
         cursor.execute(
-            """
+            sql.SQL(
+                """
             SELECT
                 COUNT(*),
                 COALESCE(SUM(betrag_euro) FILTER (WHERE betrag_euro > 0), 0),
                 ABS(COALESCE(SUM(betrag_euro) FILTER (WHERE betrag_euro < 0), 0))
-            FROM public.transactions;
+            FROM public.transactions
+            {where_clause};
             """
+            ).format(where_clause=where_clause),
+            parameters,
         )
         transaction_count, income, expenses = cursor.fetchone()
 
@@ -222,6 +309,7 @@ def get_transaction_timeline(
     category=None,
     year=None,
     month=None,
+    demo_session_id=None,
 ):
     where_clause, parameters = _build_transaction_filters(
         search=search,
@@ -229,6 +317,7 @@ def get_transaction_timeline(
         category=category,
         year=year,
         month=month,
+        demo_session_id=demo_session_id,
     )
     query = sql.SQL(
         """
@@ -261,6 +350,7 @@ def get_expenses_by_category(
     category=None,
     year=None,
     month=None,
+    demo_session_id=None,
 ):
     where_clause, parameters = _build_transaction_filters(
         search=search,
@@ -268,6 +358,7 @@ def get_expenses_by_category(
         category=category,
         year=year,
         month=month,
+        demo_session_id=demo_session_id,
     )
     where_clause += sql.SQL(" AND betrag_euro < 0")
     query = sql.SQL(
@@ -289,45 +380,63 @@ def get_expenses_by_category(
         ]
 
 
-def get_all_categories(connection):
+def get_all_categories(connection, demo_session_id=None):
+    where_clause, parameters = _build_transaction_filters(
+        demo_session_id=demo_session_id
+    )
     with connection.cursor() as cursor:
         cursor.execute(
-            """
+            sql.SQL(
+                """
             SELECT DISTINCT kategorie
             FROM public.transactions
-            WHERE kategorie IS NOT NULL AND TRIM(kategorie) <> ''
+            {where_clause}
+              AND kategorie IS NOT NULL
+              AND TRIM(kategorie) <> ''
             ORDER BY kategorie;
             """
+            ).format(where_clause=where_clause),
+            parameters,
         )
         return [row[0] for row in cursor.fetchall()]
 
 
-def get_available_years(connection):
+def get_available_years(connection, demo_session_id=None):
+    where_clause, parameters = _build_transaction_filters(
+        demo_session_id=demo_session_id
+    )
     with connection.cursor() as cursor:
         cursor.execute(
-            """
+            sql.SQL(
+                """
             SELECT DISTINCT EXTRACT(YEAR FROM datum)::integer
             FROM public.transactions
+            {where_clause}
             ORDER BY 1 DESC;
             """
+            ).format(where_clause=where_clause),
+            parameters,
         )
         return [row[0] for row in cursor.fetchall()]
 
 
-def get_transaction_by_id(connection, transaction_id):
+def get_transaction_by_id(connection, transaction_id, demo_session_id=None):
+    session_condition, session_parameters = _demo_session_filter(demo_session_id)
     with connection.cursor() as cursor:
         cursor.execute(
-            f"""
+            sql.SQL(
+                f"""
             SELECT {TRANSACTION_COLUMNS}
             FROM public.transactions
-            WHERE id = %s;
+            WHERE id = %s AND {{session_condition}};
             """,
-            (transaction_id,),
+            ).format(session_condition=session_condition),
+            [transaction_id, *session_parameters],
         )
         return _transaction_from_row(cursor.fetchone())
 
 
-def insert_transaction(connection, transaction):
+def insert_transaction(connection, transaction, demo_session_id=None):
     """Insert one transaction and return it, or None when it is a duplicate."""
     ordered_fields = tuple(API_TO_DATABASE_COLUMNS)
     values = tuple(transaction[field] for field in ordered_fields)
@@ -337,13 +446,13 @@ def insert_transaction(connection, transaction):
                 f"""
                 INSERT INTO public.transactions (
                     datum, empfaenger_sender, iban, verwendungszweck,
-                    betrag_euro, kategorie, status
+                    betrag_euro, kategorie, status, demo_session_id
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT DO NOTHING
                 RETURNING {TRANSACTION_COLUMNS};
                 """,
-                values,
+                (*values, demo_session_id),
             )
             created = _transaction_from_row(cursor.fetchone())
         connection.commit()
@@ -353,14 +462,20 @@ def insert_transaction(connection, transaction):
         raise
 
 
-def update_transaction_by_id(connection, transaction_id, transaction):
+def update_transaction_by_id(
+    connection, transaction_id, transaction, demo_session_id=None
+):
     fields = {
         API_TO_DATABASE_COLUMNS[field]: value
         for field, value in transaction.items()
         if field in API_TO_DATABASE_COLUMNS
     }
     if not fields:
-        return get_transaction_by_id(connection, transaction_id)
+        return get_transaction_by_id(
+            connection, transaction_id, demo_session_id=demo_session_id
+        )
+
+    session_condition, session_parameters = _demo_session_filter(demo_session_id)
 
     assignments = [
         sql.SQL("{} = %s").format(sql.Identifier(column)) for column in fields
@@ -369,14 +484,19 @@ def update_transaction_by_id(connection, transaction_id, transaction):
         f"""
         UPDATE public.transactions
         SET {{assignments}}
-        WHERE id = %s
+        WHERE id = %s AND {{session_condition}}
         RETURNING {TRANSACTION_COLUMNS};
         """
-    ).format(assignments=sql.SQL(", ").join(assignments))
+    ).format(
+        assignments=sql.SQL(", ").join(assignments),
+        session_condition=session_condition,
+    )
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(query, [*fields.values(), transaction_id])
+            cursor.execute(
+                query, [*fields.values(), transaction_id, *session_parameters]
+            )
             updated = _transaction_from_row(cursor.fetchone())
         connection.commit()
         return updated
@@ -385,12 +505,16 @@ def update_transaction_by_id(connection, transaction_id, transaction):
         raise
 
 
-def delete_transaction_by_id(connection, transaction_id):
+def delete_transaction_by_id(connection, transaction_id, demo_session_id=None):
+    session_condition, session_parameters = _demo_session_filter(demo_session_id)
     try:
         with connection.cursor() as cursor:
             cursor.execute(
-                "DELETE FROM public.transactions WHERE id = %s;",
-                (transaction_id,),
+                sql.SQL(
+                    "DELETE FROM public.transactions "
+                    "WHERE id = %s AND {session_condition};"
+                ).format(session_condition=session_condition),
+                [transaction_id, *session_parameters],
             )
             deleted = cursor.rowcount > 0
         connection.commit()
@@ -400,7 +524,7 @@ def delete_transaction_by_id(connection, transaction_id):
         raise
 
 
-def import_transactions(connection, transactions):
+def import_transactions(connection, transactions, demo_session_id=None):
     """Insert validated CSV rows atomically and return inserted/skipped counts."""
     inserted = 0
     skipped = 0
@@ -408,9 +532,9 @@ def import_transactions(connection, transactions):
     query = f"""
         INSERT INTO public.transactions (
             datum, empfaenger_sender, iban, verwendungszweck,
-            betrag_euro, kategorie, status
+            betrag_euro, kategorie, status, demo_session_id
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT DO NOTHING
         RETURNING id;
     """
@@ -418,7 +542,13 @@ def import_transactions(connection, transactions):
     try:
         with connection.cursor() as cursor:
             for transaction in transactions:
-                cursor.execute(query, tuple(transaction[field] for field in ordered_fields))
+                cursor.execute(
+                    query,
+                    (
+                        *(transaction[field] for field in ordered_fields),
+                        demo_session_id,
+                    ),
+                )
                 if cursor.fetchone() is None:
                     skipped += 1
                 else:

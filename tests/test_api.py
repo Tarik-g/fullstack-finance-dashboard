@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-from src.backend import database
+from src.backend import database, dependencies
 from src.backend.main import app
 
 
@@ -94,6 +94,7 @@ class ApiTests(unittest.TestCase):
             month=9,
             sort_by="amount",
             sort_direction="asc",
+            demo_session_id=None,
         )
         self.connection.close.assert_called_once()
 
@@ -183,6 +184,7 @@ class ApiTests(unittest.TestCase):
                 "category": "Lebensmittel",
                 "status": "Gebucht",
             },
+            demo_session_id=None,
         )
 
     def test_duplicate_create_returns_conflict(self):
@@ -208,18 +210,62 @@ class ApiTests(unittest.TestCase):
         delete = self.mock_db("delete_transaction_by_id", True)
 
         self.assertEqual(self.client.get(f"{TRANSACTIONS_PATH}/7").status_code, 200)
-        read.assert_called_once_with(self.connection, 7)
+        read.assert_called_once_with(
+            self.connection, 7, demo_session_id=None
+        )
 
         response = self.client.patch(
             f"{TRANSACTIONS_PATH}/7", json={"amount": "-12.50"}
         )
         self.assertEqual(response.status_code, 200)
         update.assert_called_once_with(
-            self.connection, 7, {"amount": Decimal("-12.50")}
+            self.connection,
+            7,
+            {"amount": Decimal("-12.50")},
+            demo_session_id=None,
         )
 
         self.assertEqual(self.client.delete(f"{TRANSACTIONS_PATH}/7").status_code, 204)
-        delete.assert_called_once_with(self.connection, 7)
+        delete.assert_called_once_with(
+            self.connection, 7, demo_session_id=None
+        )
+
+    def test_demo_mode_requires_and_initialises_an_isolated_session(self):
+        session_id = "887a9cf3-7c96-4c5c-91c9-9b54dc21de6d"
+        prepare = self.mock_db("prepare_demo_session")
+        query = self.mock_db(
+            "get_paginated_transactions",
+            {
+                "items": [],
+                "total": 0,
+                "page": 1,
+                "page_size": 10,
+                "total_pages": 1,
+            },
+        )
+
+        with patch.object(
+            dependencies,
+            "get_settings",
+            return_value=MagicMock(demo_mode=True),
+        ):
+            missing = self.client.get(TRANSACTIONS_PATH)
+            invalid = self.client.get(
+                TRANSACTIONS_PATH,
+                headers={"X-Demo-Session-ID": "not-a-uuid"},
+            )
+            response = self.client.get(
+                TRANSACTIONS_PATH,
+                headers={"X-Demo-Session-ID": session_id},
+            )
+
+        self.assertEqual(missing.status_code, 400)
+        self.assertEqual(invalid.status_code, 400)
+        self.assertEqual(response.status_code, 200)
+        prepare.assert_called_once_with(self.connection, session_id)
+        self.assertEqual(
+            query.call_args.kwargs["demo_session_id"], session_id
+        )
 
     def test_missing_transactions_return_404(self):
         self.mock_db("get_transaction_by_id", None)
@@ -269,13 +315,19 @@ class ApiTests(unittest.TestCase):
             headers={
                 "Origin": "http://localhost:5173",
                 "Access-Control-Request-Method": "POST",
-                "Access-Control-Request-Headers": "content-type",
+                "Access-Control-Request-Headers": (
+                    "content-type,x-demo-session-id"
+                ),
             },
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.headers["access-control-allow-origin"],
             "http://localhost:5173",
+        )
+        self.assertIn(
+            "x-demo-session-id",
+            response.headers["access-control-allow-headers"].lower(),
         )
 
 

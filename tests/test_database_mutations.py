@@ -9,6 +9,7 @@ from src.backend.database import (
     delete_transaction_by_id,
     import_transactions,
     insert_transaction,
+    prepare_demo_session,
     update_transaction_by_id,
 )
 
@@ -44,7 +45,7 @@ class DatabaseMutationTests(unittest.TestCase):
         result = insert_transaction(self.connection, TRANSACTION)
         query, parameters = self.cursor.execute.call_args.args
         self.assertNotIn("Demo Shop", query)
-        self.assertEqual(parameters, tuple(TRANSACTION.values()))
+        self.assertEqual(parameters, (*TRANSACTION.values(), None))
         self.assertEqual(result["counterparty"], "Demo Shop")
         self.connection.commit.assert_called_once()
 
@@ -83,7 +84,7 @@ class DatabaseMutationTests(unittest.TestCase):
     def test_delete_checks_rowcount_and_binds_id(self):
         self.cursor.rowcount = 1
         self.assertTrue(delete_transaction_by_id(self.connection, 7))
-        self.assertEqual(self.cursor.execute.call_args.args[1], (7,))
+        self.assertEqual(self.cursor.execute.call_args.args[1], [7])
         self.connection.commit.assert_called_once()
 
     def test_delete_failure_rolls_back_and_propagates(self):
@@ -99,6 +100,30 @@ class DatabaseMutationTests(unittest.TestCase):
         )
         self.assertEqual((inserted, skipped), (1, 1))
         self.assertEqual(self.cursor.execute.call_count, 2)
+        self.connection.commit.assert_called_once()
+
+    def test_new_demo_session_clones_template_rows(self):
+        session_id = "887a9cf3-7c96-4c5c-91c9-9b54dc21de6d"
+        self.cursor.fetchone.return_value = (session_id,)
+
+        prepare_demo_session(self.connection, session_id)
+
+        self.assertEqual(self.cursor.execute.call_count, 3)
+        clone_query, parameters = self.cursor.execute.call_args.args
+        self.assertIn("WHERE demo_session_id IS NULL", clone_query)
+        self.assertEqual(parameters, (session_id,))
+        self.connection.commit.assert_called_once()
+
+    def test_existing_demo_session_is_refreshed_without_cloning(self):
+        session_id = "887a9cf3-7c96-4c5c-91c9-9b54dc21de6d"
+        self.cursor.fetchone.return_value = None
+
+        prepare_demo_session(self.connection, session_id)
+
+        self.assertEqual(self.cursor.execute.call_count, 3)
+        refresh_query, parameters = self.cursor.execute.call_args.args
+        self.assertIn("UPDATE public.demo_sessions", refresh_query)
+        self.assertEqual(parameters, (session_id,))
         self.connection.commit.assert_called_once()
 
 

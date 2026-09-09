@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from .. import database
 from ..csv_handler import CsvFormatError, MAX_CSV_BYTES, parse_transaction_csv
-from ..dependencies import DatabaseConnection
+from ..dependencies import DatabaseConnection, DemoSessionId
 from ..schemas import CsvImportResponse
 
 
@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/v1/imports", tags=["imports"])
 @router.post("/csv", response_model=CsvImportResponse)
 def import_csv(
     connection: DatabaseConnection,
+    demo_session_id: DemoSessionId,
     file: UploadFile = File(description="UTF-8 CSV with transaction rows"),
 ):
     if not file.filename or not file.filename.lower().endswith(".csv"):
@@ -28,7 +29,9 @@ def import_csv(
     inserted = skipped = 0
     if parsed.transactions:
         inserted, skipped = database.import_transactions(
-            connection, parsed.transactions
+            connection,
+            parsed.transactions,
+            demo_session_id=demo_session_id,
         )
 
     return {

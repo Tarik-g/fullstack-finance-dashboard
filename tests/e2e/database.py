@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import sys
+from uuid import UUID
 
 import psycopg
 from psycopg.conninfo import conninfo_to_dict
@@ -45,7 +46,12 @@ def seed():
     with connect() as connection, connection.cursor() as cursor:
         schema_path = Path(__file__).resolve().parents[2] / "data" / "schema.sql"
         cursor.execute(schema_path.read_text(encoding="utf-8"))
-        cursor.execute("TRUNCATE public.transactions RESTART IDENTITY")
+        cursor.execute(
+            """
+            TRUNCATE public.transactions, public.demo_sessions
+            RESTART IDENTITY
+            """
+        )
         cursor.executemany("""
             INSERT INTO public.transactions
                 (datum, empfaenger_sender, iban, verwendungszweck, betrag_euro, kategorie, status)
@@ -57,12 +63,21 @@ def seed():
         ])
 
 
-def snapshot():
+def snapshot(demo_session_id=None):
     with connect() as connection, connection.cursor() as cursor:
-        cursor.execute("""
+        if demo_session_id is None:
+            session_filter = "demo_session_id IS NULL"
+            parameters = ()
+        else:
+            session_filter = "demo_session_id = %s"
+            parameters = (str(UUID(demo_session_id)),)
+
+        cursor.execute(f"""
             SELECT id, empfaenger_sender, betrag_euro, kategorie
-            FROM public.transactions ORDER BY id
-        """)
+            FROM public.transactions
+            WHERE {session_filter}
+            ORDER BY id
+        """, parameters)
         return [{"id": row[0], "counterparty": row[1], "amount": str(row[2]), "category": row[3]}
                 for row in cursor.fetchall()]
 
@@ -70,7 +85,7 @@ def snapshot():
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] == "seed":
         seed()
-    elif len(sys.argv) == 2 and sys.argv[1] == "snapshot":
-        print(json.dumps(snapshot()))
+    elif len(sys.argv) in (2, 3) and sys.argv[1] == "snapshot":
+        print(json.dumps(snapshot(sys.argv[2] if len(sys.argv) == 3 else None)))
     else:
         raise SystemExit("Expected seed or snapshot.")

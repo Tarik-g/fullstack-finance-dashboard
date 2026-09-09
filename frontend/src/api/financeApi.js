@@ -1,8 +1,49 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+const DEMO_SESSION_STORAGE_KEY = "finance-dashboard-demo-session-id";
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+let inMemorySessionId;
+
+function createDemoSessionId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+    /[xy]/g,
+    (character) => {
+      const random = Math.floor(Math.random() * 16);
+      const value = character === "x" ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    },
+  );
+}
+
+export function getDemoSessionId() {
+  try {
+    const storedSessionId = localStorage.getItem(DEMO_SESSION_STORAGE_KEY);
+    if (storedSessionId && UUID_PATTERN.test(storedSessionId)) {
+      return storedSessionId;
+    }
+
+    const sessionId = createDemoSessionId();
+    localStorage.setItem(DEMO_SESSION_STORAGE_KEY, sessionId);
+    return sessionId;
+  } catch {
+    inMemorySessionId ??= createDemoSessionId();
+    return inMemorySessionId;
+  }
+}
 
 async function request(path, options, errorMessage) {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  const headers = new Headers(options?.headers);
+  headers.set("X-Demo-Session-ID", getDemoSessionId());
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
 
   if (!response.ok) {
     throw new Error(`${errorMessage} (HTTP ${response.status})`);
